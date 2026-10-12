@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, Home, Plus } from "lucide-react";
+import { BookHeart, CalendarDays, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const links = [
   { href: "/", label: "Accueil", icon: Home },
-  { href: "/ajouter", label: "Ajouter", icon: Plus },
+  { href: "/journal", label: "Journal", icon: BookHeart },
   { href: "/calendrier", label: "Calendrier", icon: CalendarDays },
 ];
 

@@ -7,3 +7,10 @@ export function revalidateTiragesViews() {
   revalidatePath("/calendrier");
   revalidatePath("/ajouter");
 }
+
+/** Invalide les vues du journal de vie. */
+export function revalidateJournalViews() {
+  revalidatePath("/", "layout");
+  revalidatePath("/journal");
+  revalidatePath("/journal/ajouter");
+}

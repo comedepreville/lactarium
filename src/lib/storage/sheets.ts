@@ -1,8 +1,10 @@
 import { google } from "googleapis";
-import type { Tirage } from "../types";
+import type { JournalEntry, Tirage } from "../types";
 
-const SHEET_RANGE = "Tirages!A:C";
-const SHEET_NAME = "Tirages";
+const TIRAGES_SHEET = "Tirages";
+const JOURNAL_SHEET = "Journal";
+const TIRAGES_RANGE = "Tirages!A:C";
+const JOURNAL_RANGE = "Journal!A:C";
 
 function hasSheetsConfig(): boolean {
   return Boolean(
@@ -32,35 +34,105 @@ function spreadsheetId(): string {
   return process.env.GOOGLE_SHEETS_ID!;
 }
 
-async function ensureSheet(): Promise<void> {
+async function ensureNamedSheet(
+  sheetName: string,
+  headerRange: string,
+  headers: string[],
+): Promise<void> {
   const sheets = getSheets();
   const meta = await sheets.spreadsheets.get({
     spreadsheetId: spreadsheetId(),
   });
   const exists = meta.data.sheets?.some(
-    (s) => s.properties?.title === SHEET_NAME,
+    (s) => s.properties?.title === sheetName,
   );
   if (!exists) {
     await sheets.spreadsheets.batchUpdate({
       spreadsheetId: spreadsheetId(),
       requestBody: {
-        requests: [{ addSheet: { properties: { title: SHEET_NAME } } }],
+        requests: [{ addSheet: { properties: { title: sheetName } } }],
       },
     });
   }
 
   const header = await sheets.spreadsheets.values.get({
     spreadsheetId: spreadsheetId(),
-    range: "Tirages!A1:C1",
+    range: headerRange,
   });
   if (!header.data.values?.length) {
     await sheets.spreadsheets.values.update({
       spreadsheetId: spreadsheetId(),
-      range: "Tirages!A1:C1",
+      range: headerRange,
       valueInputOption: "RAW",
-      requestBody: { values: [["id", "datetime", "quantityMl"]] },
+      requestBody: { values: [headers] },
     });
   }
+}
+
+async function ensureSheet(): Promise<void> {
+  await ensureNamedSheet(TIRAGES_SHEET, "Tirages!A1:C1", [
+    "id",
+    "datetime",
+    "quantityMl",
+  ]);
+}
+
+async function ensureJournalSheet(): Promise<void> {
+  await ensureNamedSheet(JOURNAL_SHEET, "Journal!A1:C1", [
+    "id",
+    "datetime",
+    "text",
+  ]);
+}
+
+async function findRowIndexInColumn(
+  columnRange: string,
+  id: string,
+): Promise<number | null> {
+  const sheets = getSheets();
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: spreadsheetId(),
+    range: columnRange,
+  });
+  const rows = res.data.values ?? [];
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i]?.[0] === id) return i + 1; // 1-based sheet rows
+  }
+  return null;
+}
+
+async function deleteSheetRow(
+  sheetName: string,
+  rowIndex: number,
+): Promise<boolean> {
+  const sheets = getSheets();
+  const meta = await sheets.spreadsheets.get({
+    spreadsheetId: spreadsheetId(),
+  });
+  const sheet = meta.data.sheets?.find(
+    (s) => s.properties?.title === sheetName,
+  );
+  const sheetId = sheet?.properties?.sheetId;
+  if (sheetId === undefined || sheetId === null) return false;
+
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId: spreadsheetId(),
+    requestBody: {
+      requests: [
+        {
+          deleteDimension: {
+            range: {
+              sheetId,
+              dimension: "ROWS",
+              startIndex: rowIndex - 1,
+              endIndex: rowIndex,
+            },
+          },
+        },
+      ],
+    },
+  });
+  return true;
 }
 
 function rowToTirage(row: string[]): Tirage | null {
@@ -74,6 +146,15 @@ function rowToTirage(row: string[]): Tirage | null {
   };
 }
 
+function rowToJournal(row: string[]): JournalEntry | null {
+  if (!row[0] || !row[1] || row[2] === undefined || row[2] === "") return null;
+  return {
+    id: row[0],
+    datetime: row[1],
+    text: row[2],
+  };
+}
+
 export function sheetsConfigured(): boolean {
   return hasSheetsConfig();
 }
@@ -83,7 +164,7 @@ export async function sheetsList(): Promise<Tirage[]> {
   const sheets = getSheets();
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: spreadsheetId(),
-    range: SHEET_RANGE,
+    range: TIRAGES_RANGE,
   });
   const rows = res.data.values ?? [];
   return rows
@@ -104,7 +185,7 @@ export async function sheetsCreate(
   const sheets = getSheets();
   await sheets.spreadsheets.values.append({
     spreadsheetId: spreadsheetId(),
-    range: SHEET_RANGE,
+    range: TIRAGES_RANGE,
     valueInputOption: "RAW",
     insertDataOption: "INSERT_ROWS",
     requestBody: {
@@ -115,16 +196,7 @@ export async function sheetsCreate(
 }
 
 async function findRowIndex(id: string): Promise<number | null> {
-  const sheets = getSheets();
-  const res = await sheets.spreadsheets.values.get({
-    spreadsheetId: spreadsheetId(),
-    range: "Tirages!A:A",
-  });
-  const rows = res.data.values ?? [];
-  for (let i = 1; i < rows.length; i++) {
-    if (rows[i]?.[0] === id) return i + 1; // 1-based sheet rows
-  }
-  return null;
+  return findRowIndexInColumn("Tirages!A:A", id);
 }
 
 export async function sheetsUpdate(
@@ -155,38 +227,86 @@ export async function sheetsDelete(id: string): Promise<boolean> {
   await ensureSheet();
   const rowIndex = await findRowIndex(id);
   if (rowIndex === null) return false;
-
-  const sheets = getSheets();
-  const meta = await sheets.spreadsheets.get({
-    spreadsheetId: spreadsheetId(),
-  });
-  const sheet = meta.data.sheets?.find(
-    (s) => s.properties?.title === SHEET_NAME,
-  );
-  const sheetId = sheet?.properties?.sheetId;
-  if (sheetId === undefined || sheetId === null) return false;
-
-  await sheets.spreadsheets.batchUpdate({
-    spreadsheetId: spreadsheetId(),
-    requestBody: {
-      requests: [
-        {
-          deleteDimension: {
-            range: {
-              sheetId,
-              dimension: "ROWS",
-              startIndex: rowIndex - 1,
-              endIndex: rowIndex,
-            },
-          },
-        },
-      ],
-    },
-  });
-  return true;
+  return deleteSheetRow(TIRAGES_SHEET, rowIndex);
 }
 
 export async function sheetsGet(id: string): Promise<Tirage | null> {
   const all = await sheetsList();
   return all.find((t) => t.id === id) ?? null;
+}
+
+export async function sheetsListJournal(): Promise<JournalEntry[]> {
+  await ensureJournalSheet();
+  const sheets = getSheets();
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: spreadsheetId(),
+    range: JOURNAL_RANGE,
+  });
+  const rows = res.data.values ?? [];
+  return rows
+    .slice(1)
+    .map(rowToJournal)
+    .filter((e): e is JournalEntry => e !== null);
+}
+
+export async function sheetsCreateJournal(
+  input: Omit<JournalEntry, "id"> & { id?: string },
+): Promise<JournalEntry> {
+  await ensureJournalSheet();
+  const entry: JournalEntry = {
+    id: input.id ?? crypto.randomUUID(),
+    datetime: input.datetime,
+    text: input.text,
+  };
+  const sheets = getSheets();
+  await sheets.spreadsheets.values.append({
+    spreadsheetId: spreadsheetId(),
+    range: JOURNAL_RANGE,
+    valueInputOption: "RAW",
+    insertDataOption: "INSERT_ROWS",
+    requestBody: {
+      values: [[entry.id, entry.datetime, entry.text]],
+    },
+  });
+  return entry;
+}
+
+async function findJournalRowIndex(id: string): Promise<number | null> {
+  return findRowIndexInColumn("Journal!A:A", id);
+}
+
+export async function sheetsUpdateJournal(
+  id: string,
+  patch: Partial<Omit<JournalEntry, "id">>,
+): Promise<JournalEntry | null> {
+  await ensureJournalSheet();
+  const rowIndex = await findJournalRowIndex(id);
+  if (rowIndex === null) return null;
+
+  const existing = (await sheetsListJournal()).find((e) => e.id === id);
+  if (!existing) return null;
+
+  const updated: JournalEntry = { ...existing, ...patch };
+  const sheets = getSheets();
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: spreadsheetId(),
+    range: `Journal!A${rowIndex}:C${rowIndex}`,
+    valueInputOption: "RAW",
+    requestBody: {
+      values: [[updated.id, updated.datetime, updated.text]],
+    },
+  });
+  return updated;
+}
+
+export async function sheetsDeleteJournal(id: string): Promise<boolean> {
+  await ensureJournalSheet();
+  const rowIndex = await findJournalRowIndex(id);
+  if (rowIndex === null) return false;
+  return deleteSheetRow(JOURNAL_SHEET, rowIndex);
+}
+
+export async function sheetsGetJournal(id: string): Promise<JournalEntry | null> {
+  const all = await sheetsListJournal();
+  return all.find((e) => e.id === id) ?? null;
 }
