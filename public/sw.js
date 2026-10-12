@@ -1,8 +1,10 @@
-const CACHE = "lactae-v2";
+const CACHE = "lactae-v3";
 const ASSETS = [
   "/",
   "/ajouter",
   "/calendrier",
+  "/journal",
+  "/journal/ajouter",
   "/manifest.webmanifest",
   "/favicon.svg",
   "/icons/icon-192.png",
@@ -28,6 +30,26 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
   const url = new URL(request.url);
   if (url.pathname.startsWith("/api/")) return;
+
+  const isNavigation =
+    request.mode === "navigate" ||
+    (request.headers.get("accept") || "").includes("text/html");
+
+  // Pages HTML : réseau d’abord pour éviter les listes obsolètes après CRUD.
+  if (isNavigation) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok && url.origin === self.location.origin) {
+            const clone = response.clone();
+            caches.open(CACHE).then((cache) => cache.put(request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request)),
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(request).then((cached) => {
