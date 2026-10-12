@@ -30,7 +30,7 @@ export default async function HomePage() {
             {greeting}
           </p>
           <h1 className="font-display text-5xl leading-[0.95] tracking-tight text-[var(--rose-deep)] sm:text-6xl">
-            Lactæ
+            Lactae
           </h1>
           <p className="max-w-sm text-sm leading-relaxed text-[var(--ink-muted)]">
             Suivi doux de vos tirages — objectif {advice.targetMl} ml aujourd’hui.
