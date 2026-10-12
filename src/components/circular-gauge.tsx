@@ -13,7 +13,7 @@ type Props = {
 export function CircularGauge({
   value,
   max,
-  label = "sur 24 h",
+  label = "aujourd’hui",
   unit = "ml",
   className,
   size = 220,

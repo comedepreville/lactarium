@@ -18,20 +18,19 @@ export function DashboardPanel({ advice }: { advice: DashboardAdvice }) {
   const nextAt = advice.nextSuggestedAt;
   const overdue = nextAt ? isOverdue(nextAt) : false;
 
-  const delayLabel = !nextAt
-    ? "—"
-    : overdue
-      ? "Maintenant"
-      : `dans ${formatDistanceToNow(parseISO(nextAt), { locale: fr })}`;
+  const delayLabel =
+    advice.remainingTiragesEstimate === 0
+      ? "Objectif ok"
+      : !nextAt
+        ? "—"
+        : overdue
+          ? "Maintenant"
+          : `dans ${formatDistanceToNow(parseISO(nextAt), { locale: fr })}`;
 
   const clockLabel = nextAt ? `à ${formatParisTime(nextAt)}` : "";
 
   const avgLabel =
-    advice.avgMlPerTirage48h > 0
-      ? `${advice.avgMlPerTirage48h} ml`
-      : advice.avgMlPerTirage24h > 0
-        ? `${advice.avgMlPerTirage24h} ml`
-        : "—";
+    advice.avgMlLast3 > 0 ? `${advice.avgMlLast3}` : "—";
 
   return (
     <section
@@ -41,23 +40,23 @@ export function DashboardPanel({ advice }: { advice: DashboardAdvice }) {
     >
       <div className="surface-card rounded-[2rem] px-4 py-8 sm:px-6">
         <CircularGauge
-          value={advice.drawnMl24h}
+          value={advice.drawnMlToday}
           max={advice.targetMl || TARGET_ML_24H}
-          label="sur 24 h"
+          label="aujourd’hui"
         />
 
         <div className="mt-8 grid grid-cols-3 gap-2 sm:gap-3">
           <Metric
             label="Tirages"
-            value={`${advice.tirageCount24h}`}
-            hint="sur 24 h"
+            value={`${advice.tirageCountToday}`}
+            hint="aujourd’hui"
           />
           <Metric
             label="Restant"
             value={`${advice.remainingMl}`}
             hint="ml"
           />
-          <Metric label="Moyenne" value={avgLabel.replace(" ml", "")} hint="ml" />
+          <Metric label="Moyenne" value={avgLabel} hint="ml / 3 derniers" />
         </div>
       </div>
 
@@ -65,7 +64,14 @@ export function DashboardPanel({ advice }: { advice: DashboardAdvice }) {
         <Metric
           label="Prochain tirage"
           value={delayLabel}
-          hint={clockLabel}
+          hint={
+            clockLabel ||
+            (advice.intervalCappedHigh
+              ? "plafond 5 h"
+              : advice.remainingTiragesEstimate === 0
+                ? "plus de tirage nécessaire"
+                : undefined)
+          }
           large
         />
         <Metric
@@ -84,7 +90,7 @@ export function DashboardPanel({ advice }: { advice: DashboardAdvice }) {
 
       <div
         className={cn(
-          "rounded-full px-5 py-3.5 text-center text-sm leading-relaxed",
+          "rounded-2xl px-5 py-3.5 text-center text-sm leading-relaxed text-balance",
           statusStyles[advice.status],
         )}
       >
