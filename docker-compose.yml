@@ -1,0 +1,20 @@
+services:
+  lactarium:
+    build: .
+    container_name: lactarium
+    ports:
+      - "${PORT:-3847}:3000"
+    environment:
+      DATA_DIR: /data
+      # Laissez vide pour le stockage local JSON.
+      # Pour Google Sheets, renseignez les 3 variables ci-dessous
+      # (ou via un fichier .env à côté de ce compose).
+      GOOGLE_SHEETS_ID: ${GOOGLE_SHEETS_ID:-}
+      GOOGLE_SERVICE_ACCOUNT_EMAIL: ${GOOGLE_SERVICE_ACCOUNT_EMAIL:-}
+      GOOGLE_PRIVATE_KEY: ${GOOGLE_PRIVATE_KEY:-}
+    volumes:
+      - lactarium-data:/data
+    restart: unless-stopped
+
+volumes:
+  lactarium-data:
