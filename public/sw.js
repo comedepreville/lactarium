@@ -1,4 +1,4 @@
-const CACHE = "lactarium-v1";
+const CACHE = "lactae-v1";
 const ASSETS = ["/", "/ajouter", "/calendrier", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
