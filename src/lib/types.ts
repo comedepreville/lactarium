@@ -27,7 +27,10 @@ export type DashboardAdvice = {
   recommendedTiragesPerDay: number;
   remainingTiragesEstimate: number;
   lastTirageAt: string | null;
-  nextDeadlineAt: string | null;
+  /** Cadence: prochain tirage recommandé (ISO) */
+  nextSuggestedAt: string | null;
+  /** Intervalle de cadence en heures (24h / tirages restants), plafonné au max jour/nuit */
+  suggestedIntervalHours: number | null;
   maxGapHours: number;
   isNightWindow: boolean;
   status: "ok" | "behind" | "ahead" | "overdue";

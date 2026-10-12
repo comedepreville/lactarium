@@ -15,16 +15,10 @@ export default async function AjouterPage({ searchParams }: Props) {
 
   return (
     <div className="space-y-6">
-      <header className="animate-rise space-y-2">
-        <p className="text-sm uppercase tracking-[0.18em] text-[var(--teal-deep)]">
-          Lactarium
-        </p>
+      <header className="animate-rise">
         <h1 className="font-[family-name:var(--font-display)] text-4xl tracking-tight text-[var(--ink)]">
           {mode === "edit" ? "Modifier un tirage" : "Ajouter un tirage"}
         </h1>
-        <p className="text-[var(--ink-muted)]">
-          Heure française, pas de 10 minutes · quantité par pas de 10 ml.
-        </p>
       </header>
 
       <TirageForm

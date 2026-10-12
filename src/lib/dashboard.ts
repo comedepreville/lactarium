@@ -1,12 +1,13 @@
-import { parseISO } from "date-fns";
+import { addHours, parseISO } from "date-fns";
 import type { DashboardAdvice, DaySummary, Tirage, TirageWithGap } from "./types";
 import {
   TARGET_ML_24H,
   formatParisDate,
   formatParisDateShort,
   isPast,
+  isNightAt,
+  maxGapHoursAt,
   minutesBetween,
-  nextDeadlineFrom,
   parisDateKey,
   rollingWindowStart,
 } from "./time";
@@ -69,6 +70,22 @@ function inLastHours(tirages: Tirage[], hours: number): Tirage[] {
   return tirages.filter((t) => parseISO(t.datetime).getTime() >= start);
 }
 
+/**
+ * Cadence pour atteindre 800 ml :
+ * intervalle = 24 h / nb de tirages encore nécessaires (d’après la moyenne observée),
+ * plafonné au max jour (6 h) / nuit (5 h).
+ */
+function cadenceIntervalHours(
+  remainingTirages: number,
+  recommendedPerDay: number,
+  maxGapHours: number,
+): number {
+  const divisor =
+    remainingTirages > 0 ? remainingTirages : Math.max(1, recommendedPerDay);
+  const raw = 24 / divisor;
+  return Math.min(raw, maxGapHours);
+}
+
 export function computeDashboard(tirages: Tirage[]): DashboardAdvice {
   const last24 = inLastHours(tirages, 24);
   const last48 = inLastHours(tirages, 48);
@@ -77,7 +94,6 @@ export function computeDashboard(tirages: Tirage[]): DashboardAdvice {
   const avgMlPerTirage24h = avgQuantity(last24);
   const avgMlPerTirage48h = avgQuantity(last48);
 
-  // Prefer 48h average when available (more stable), else 24h, else assume 100 ml
   const referenceAvg =
     last48.length >= 2
       ? avgMlPerTirage48h
@@ -98,40 +114,49 @@ export function computeDashboard(tirages: Tirage[]): DashboardAdvice {
   const last = sorted[0] ?? null;
   const lastTirageAt = last?.datetime ?? null;
 
-  let nextDeadlineAt: string | null = null;
-  let maxGapHours = 6;
-  let isNightWindow = false;
+  const anchor = lastTirageAt ? parseISO(lastTirageAt) : new Date();
+  const maxGapHours = maxGapHoursAt(anchor);
+  const isNightWindow = isNightAt(anchor);
 
-  if (lastTirageAt) {
-    const { deadline, maxGapHours: gap, isNight } =
-      nextDeadlineFrom(lastTirageAt);
-    nextDeadlineAt = deadline.toISOString();
-    maxGapHours = gap;
-    isNightWindow = isNight;
-  }
+  const suggestedIntervalHours = cadenceIntervalHours(
+    remainingTiragesEstimate,
+    recommendedTiragesPerDay,
+    maxGapHours,
+  );
+
+  const nextSuggestedAt = addHours(
+    anchor,
+    suggestedIntervalHours,
+  ).toISOString();
+
+  const maxDeadlineAt = addHours(anchor, maxGapHours).toISOString();
+  const cadenceOverdue = isPast(nextSuggestedAt);
+  const maxGapOverdue = lastTirageAt ? isPast(maxDeadlineAt) : false;
 
   let status: DashboardAdvice["status"] = "ok";
   let message = "";
 
   if (!lastTirageAt) {
     status = "behind";
-    message =
-      "Aucun tirage enregistré. Commencez par ajouter le premier pour caler le rythme.";
-  } else if (nextDeadlineAt && isPast(nextDeadlineAt)) {
+    message = "Aucun tirage enregistré.";
+  } else if (maxGapOverdue) {
     status = "overdue";
-    message = `Le délai max (${maxGapHours} h ${isNightWindow ? "nuit" : "journée"}) est dépassé. Un tirage est recommandé maintenant.`;
+    message = `Délai max dépassé (${maxGapHours} h). Tirez maintenant.`;
+  } else if (cadenceOverdue && remainingMl > 0) {
+    status = "overdue";
+    message = "Cadence en retard pour la cible 800 ml. Tirez bientôt.";
   } else if (drawnMl24h > TARGET_ML_24H + 100) {
     status = "ahead";
-    message = `Volume élevé sur 24 h (${drawnMl24h} ml). Au-delà de ${TARGET_ML_24H} ml, risque de surstimulation — restez dans la cible.`;
+    message = `Volume élevé (${drawnMl24h} ml). Risque de surstimulation.`;
   } else if (drawnMl24h < TARGET_ML_24H * 0.7 && last24.length > 0) {
     status = "behind";
-    message = `En dessous de la cible : ${remainingMl} ml restants (~${remainingTiragesEstimate} tirage${remainingTiragesEstimate > 1 ? "s" : ""}) sur 24 h glissantes.`;
+    message = `${remainingMl} ml restants ≈ ${remainingTiragesEstimate} tirage${remainingTiragesEstimate > 1 ? "s" : ""}.`;
   } else if (drawnMl24h >= TARGET_ML_24H) {
     status = "ok";
-    message = `Cible atteinte (${drawnMl24h} ml / ${TARGET_ML_24H} ml). Maintenez l’espacement max ${maxGapHours} h.`;
+    message = `Cible atteinte (${drawnMl24h} ml).`;
   } else {
     status = "ok";
-    message = `Il reste ${remainingMl} ml (~${remainingTiragesEstimate} tirage${remainingTiragesEstimate > 1 ? "s" : ""}) pour atteindre ${TARGET_ML_24H} ml / 24 h. Rythme conseillé : ~${recommendedTiragesPerDay} tirages/jour.`;
+    message = `${remainingMl} ml restants ≈ ${remainingTiragesEstimate} tirage${remainingTiragesEstimate > 1 ? "s" : ""}.`;
   }
 
   return {
@@ -144,7 +169,8 @@ export function computeDashboard(tirages: Tirage[]): DashboardAdvice {
     recommendedTiragesPerDay,
     remainingTiragesEstimate,
     lastTirageAt,
-    nextDeadlineAt,
+    nextSuggestedAt,
+    suggestedIntervalHours,
     maxGapHours,
     isNightWindow,
     status,

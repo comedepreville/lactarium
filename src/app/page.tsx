@@ -3,7 +3,7 @@ import { DashboardPanel } from "@/components/dashboard-panel";
 import { DayList } from "@/components/day-list";
 import { DeveloperCredit } from "@/components/developer-credit";
 import { computeDashboard, lastNDays } from "@/lib/dashboard";
-import { getBackend, listTirages } from "@/lib/storage";
+import { listTirages } from "@/lib/storage";
 import { Plus } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +12,6 @@ export default async function HomePage() {
   const tirages = await listTirages();
   const advice = computeDashboard(tirages);
   const recentDays = lastNDays(tirages, 3);
-  const backend = getBackend();
 
   return (
     <div className="space-y-8">
@@ -27,15 +26,9 @@ export default async function HomePage() {
         />
 
         <div className="relative animate-rise space-y-4">
-          <p className="text-sm uppercase tracking-[0.18em] text-[var(--teal-deep)]">
-            Suivi des tirages
-          </p>
           <h1 className="font-[family-name:var(--font-display)] text-5xl leading-[0.95] tracking-tight text-[var(--ink)] sm:text-6xl">
             Lactarium
           </h1>
-          <p className="max-w-sm text-[var(--ink-muted)]">
-            Cible 800 ml / 24 h — sans surstimulation, sans engorgement.
-          </p>
           <Link
             href="/ajouter"
             className="mt-2 inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-[var(--teal)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--teal-deep)]"
@@ -52,14 +45,9 @@ export default async function HomePage() {
 
       <section className="space-y-4">
         <div className="flex items-end justify-between gap-3">
-          <div>
-            <h2 className="font-[family-name:var(--font-display)] text-2xl text-[var(--ink)]">
-              Trois derniers jours
-            </h2>
-            <p className="text-sm text-[var(--ink-muted)]">
-              Volume, nombre de tirages et écarts
-            </p>
-          </div>
+          <h2 className="font-[family-name:var(--font-display)] text-2xl text-[var(--ink)]">
+            Trois derniers jours
+          </h2>
           <Link
             href="/calendrier"
             className="text-sm font-medium text-[var(--teal-deep)] underline-offset-4 hover:underline"
@@ -69,10 +57,6 @@ export default async function HomePage() {
         </div>
         <DayList days={recentDays} />
       </section>
-
-      <p className="text-center text-[10px] uppercase tracking-wider text-[var(--ink-muted)]/70">
-        Stockage : {backend === "sheets" ? "Google Sheets" : "local"}
-      </p>
 
       <DeveloperCredit />
     </div>

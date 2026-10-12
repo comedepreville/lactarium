@@ -114,7 +114,7 @@ export function TirageForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="time">Heure (Paris, pas de 10 min)</Label>
+        <Label htmlFor="time">Heure</Label>
         <select
           id="time"
           value={time}
@@ -131,7 +131,7 @@ export function TirageForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="qty">Quantité (ml, pas de 10)</Label>
+        <Label htmlFor="qty">Quantité (ml)</Label>
         <select
           id="qty"
           value={quantity}
