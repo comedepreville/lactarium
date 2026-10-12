@@ -3,20 +3,21 @@
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { CircularGauge } from "@/components/circular-gauge";
+import { StatusBanner } from "@/components/status-banner";
 import type { DashboardAdvice } from "@/lib/types";
 import { formatParisTime, TARGET_ML_24H } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
-const statusStyles = {
-  ok: "bg-[var(--blush)] text-[var(--rose-deep)]",
-  behind: "bg-[#f7ebe0] text-[#8a5a3c]",
-  ahead: "bg-[#f6e4e8] text-[var(--rose-deep)]",
-  overdue: "bg-[#f3ddd8] text-[#7a3f3d]",
-};
-
-export function DashboardPanel({ advice }: { advice: DashboardAdvice }) {
+export function DashboardPanel({
+  advice,
+  hideStatusBanner = false,
+}: {
+  advice: DashboardAdvice;
+  /** Quand l’alerte critique est déjà affichée en haut de page */
+  hideStatusBanner?: boolean;
+}) {
   const nextAt = advice.nextSuggestedAt;
-  const overdue = nextAt ? isOverdue(nextAt) : false;
+  const overdue = advice.cadenceOverdue || (nextAt ? isOverdue(nextAt) : false);
 
   const delayLabel =
     advice.remainingTiragesEstimate === 0
@@ -24,13 +25,13 @@ export function DashboardPanel({ advice }: { advice: DashboardAdvice }) {
       : !nextAt
         ? "—"
         : overdue
-          ? "Maintenant"
+          ? "Dès que possible"
           : `dans ${formatDistanceToNow(parseISO(nextAt), { locale: fr })}`;
 
-  const clockLabel = nextAt ? `à ${formatParisTime(nextAt)}` : "";
+  const clockLabel =
+    nextAt && !overdue ? `à ${formatParisTime(nextAt)}` : undefined;
 
-  const avgLabel =
-    advice.avgMlLast3 > 0 ? `${advice.avgMlLast3}` : "—";
+  const avgLabel = advice.avgMlLast3 > 0 ? `${advice.avgMlLast3}` : "—";
 
   return (
     <section
@@ -66,11 +67,13 @@ export function DashboardPanel({ advice }: { advice: DashboardAdvice }) {
           value={delayLabel}
           hint={
             clockLabel ||
-            (advice.intervalCappedHigh
-              ? "plafond 5 h"
-              : advice.remainingTiragesEstimate === 0
-                ? "plus de tirage nécessaire"
-                : undefined)
+            (overdue
+              ? "échéance dépassée"
+              : advice.intervalCappedHigh
+                ? "plafond 5 h"
+                : advice.remainingTiragesEstimate === 0
+                  ? "plus de tirage nécessaire"
+                  : undefined)
           }
           large
         />
@@ -88,14 +91,9 @@ export function DashboardPanel({ advice }: { advice: DashboardAdvice }) {
         </p>
       )}
 
-      <div
-        className={cn(
-          "rounded-2xl px-5 py-3.5 text-center text-sm leading-relaxed text-balance",
-          statusStyles[advice.status],
-        )}
-      >
-        {advice.message}
-      </div>
+      {!hideStatusBanner && (
+        <StatusBanner status={advice.status} message={advice.message} />
+      )}
     </section>
   );
 }

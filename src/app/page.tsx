@@ -2,6 +2,7 @@ import Link from "next/link";
 import { DashboardPanel } from "@/components/dashboard-panel";
 import { DayList } from "@/components/day-list";
 import { DeveloperCredit } from "@/components/developer-credit";
+import { StatusBanner } from "@/components/status-banner";
 import { computeDashboard, lastNDays } from "@/lib/dashboard";
 import { listTirages } from "@/lib/storage";
 import { nowParis } from "@/lib/time";
@@ -21,10 +22,19 @@ export default async function HomePage() {
   const advice = computeDashboard(tirages);
   const recentDays = lastNDays(tirages, 3);
   const greeting = greetingLabel();
+  const showTopAlert = advice.maxGapOverdue;
 
   return (
     <div className="space-y-8">
       <section className="animate-rise relative space-y-5 pt-2">
+        {showTopAlert && (
+          <StatusBanner
+            status="overdue"
+            message={advice.message}
+            className="animate-rise text-base font-medium shadow-[0_8px_20px_rgb(122_63_61_/_0.12)]"
+          />
+        )}
+
         <div className="space-y-2">
           <p className="text-sm font-medium uppercase tracking-[0.18em] text-[var(--ink-muted)]">
             {greeting}
@@ -46,7 +56,7 @@ export default async function HomePage() {
         </Link>
       </section>
 
-      <DashboardPanel advice={advice} />
+      <DashboardPanel advice={advice} hideStatusBanner={showTopAlert} />
 
       <section className="space-y-4">
         <div className="flex items-end justify-between gap-3 px-1">
