@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { revalidateTiragesViews } from "@/lib/revalidate";
 import { createTirage, getBackend, listTirages } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const createSchema = z.object({
   datetime: z.string().datetime(),
@@ -36,6 +38,7 @@ export async function POST(request: Request) {
       );
     }
     const tirage = await createTirage(parsed.data);
+    revalidateTiragesViews();
     return NextResponse.json({ tirage, backend: getBackend() }, { status: 201 });
   } catch (error) {
     console.error(error);

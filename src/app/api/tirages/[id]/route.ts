@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { revalidateTiragesViews } from "@/lib/revalidate";
 import {
   deleteTirage,
   getBackend,
@@ -8,6 +9,7 @@ import {
 } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const updateSchema = z.object({
   datetime: z.string().datetime().optional(),
@@ -45,6 +47,7 @@ export async function PATCH(request: Request, { params }: Params) {
     if (!tirage) {
       return NextResponse.json({ error: "Tirage introuvable" }, { status: 404 });
     }
+    revalidateTiragesViews();
     return NextResponse.json({ tirage, backend: getBackend() });
   } catch (error) {
     console.error(error);
@@ -59,6 +62,7 @@ export async function DELETE(_request: Request, { params }: Params) {
     if (!ok) {
       return NextResponse.json({ error: "Tirage introuvable" }, { status: 404 });
     }
+    revalidateTiragesViews();
     return NextResponse.json({ ok: true, backend: getBackend() });
   } catch (error) {
     console.error(error);

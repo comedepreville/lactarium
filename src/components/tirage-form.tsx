@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -31,7 +30,6 @@ export function TirageForm({
   initialDatetime,
   initialQuantityMl = 100,
 }: Props) {
-  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -70,8 +68,8 @@ export function TirageForm({
           const data = await res.json().catch(() => ({}));
           throw new Error(data.error || "Échec de l’enregistrement");
         }
-        router.push("/");
-        router.refresh();
+        // Navigation dure : le dashboard / calendrier se recalculent à coup sûr
+        window.location.assign("/");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erreur inconnue");
       }
@@ -88,8 +86,7 @@ export function TirageForm({
           method: "DELETE",
         });
         if (!res.ok) throw new Error("Suppression impossible");
-        router.push("/calendrier");
-        router.refresh();
+        window.location.assign("/");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erreur inconnue");
       }
