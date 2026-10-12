@@ -68,7 +68,6 @@ export function TirageForm({
           const data = await res.json().catch(() => ({}));
           throw new Error(data.error || "Échec de l’enregistrement");
         }
-        // Navigation dure : le dashboard / calendrier se recalculent à coup sûr
         window.location.assign("/");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erreur inconnue");
@@ -96,27 +95,34 @@ export function TirageForm({
   const todayKey = parisDateKey(nowParis());
 
   return (
-    <form onSubmit={submit} className="animate-rise space-y-6">
+    <form
+      onSubmit={submit}
+      className="surface-card animate-rise space-y-6 rounded-[2rem] px-5 py-6 sm:px-6"
+    >
       <div className="space-y-2">
-        <Label htmlFor="date">Date</Label>
+        <Label htmlFor="date" className="text-[var(--ink-muted)]">
+          Date
+        </Label>
         <input
           id="date"
           type="date"
           value={dateKey}
           max={todayKey}
           onChange={(e) => setDateKey(e.target.value)}
-          className="flex h-11 w-full rounded-xl border border-[var(--line)] bg-white/80 px-3 text-[var(--ink)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--teal)]/40"
+          className="pill-field"
           required
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="time">Heure</Label>
+        <Label htmlFor="time" className="text-[var(--ink-muted)]">
+          Heure
+        </Label>
         <select
           id="time"
           value={time}
           onChange={(e) => setTime(e.target.value)}
-          className="flex h-11 w-full rounded-xl border border-[var(--line)] bg-white/80 px-3 text-[var(--ink)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--teal)]/40"
+          className="pill-field appearance-none"
           required
         >
           {TIME_OPTIONS.map((opt) => (
@@ -128,12 +134,14 @@ export function TirageForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="qty">Quantité (ml)</Label>
+        <Label htmlFor="qty" className="text-[var(--ink-muted)]">
+          Quantité (ml)
+        </Label>
         <select
           id="qty"
           value={quantity}
           onChange={(e) => setQuantity(Number(e.target.value))}
-          className="flex h-11 w-full rounded-xl border border-[var(--line)] bg-white/80 px-3 text-[var(--ink)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--teal)]/40"
+          className="pill-field appearance-none"
           required
         >
           {QUANTITIES.map((q) => (
@@ -145,16 +153,16 @@ export function TirageForm({
       </div>
 
       {error && (
-        <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+        <p className="rounded-full bg-[#f3ddd8] px-4 py-3 text-sm text-[#7a3f3d]">
           {error}
         </p>
       )}
 
-      <div className="flex flex-col gap-3 sm:flex-row">
+      <div className="flex flex-col gap-3 pt-1 sm:flex-row">
         <Button
           type="submit"
           disabled={pending}
-          className="h-11 flex-1 rounded-xl bg-[var(--teal)] text-white hover:bg-[var(--teal-deep)]"
+          className="h-12 flex-1 rounded-full bg-[var(--rose-dust)] px-6 text-[var(--primary-foreground)] hover:bg-[var(--rose-deep)]"
         >
           {pending ? (
             <>
@@ -162,7 +170,7 @@ export function TirageForm({
               Enregistrement…
             </>
           ) : mode === "edit" ? (
-            "Enregistrer les modifications"
+            "Enregistrer"
           ) : (
             "Ajouter le tirage"
           )}
@@ -173,7 +181,7 @@ export function TirageForm({
             variant="outline"
             disabled={pending}
             onClick={remove}
-            className="h-11 rounded-xl"
+            className="h-12 rounded-full border-[var(--line)] bg-transparent px-5 text-[var(--rose-deep)] hover:bg-[var(--blush)]"
           >
             <Trash2 />
             Supprimer

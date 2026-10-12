@@ -4,53 +4,58 @@ import { DayList } from "@/components/day-list";
 import { DeveloperCredit } from "@/components/developer-credit";
 import { computeDashboard, lastNDays } from "@/lib/dashboard";
 import { listTirages } from "@/lib/storage";
+import { nowParis } from "@/lib/time";
 import { Plus } from "lucide-react";
 
 export const dynamic = "force-dynamic";
+
+function greetingLabel() {
+  const hour = nowParis().getHours();
+  if (hour < 12) return "Bonjour";
+  if (hour < 18) return "Bon après-midi";
+  return "Bonsoir";
+}
 
 export default async function HomePage() {
   const tirages = await listTirages();
   const advice = computeDashboard(tirages);
   const recentDays = lastNDays(tirages, 3);
+  const greeting = greetingLabel();
 
   return (
     <div className="space-y-8">
-      <section className="relative overflow-hidden rounded-3xl px-1 pb-2 pt-4">
-        <div
-          aria-hidden
-          className="hero-orb pointer-events-none absolute -right-8 -top-10 size-40 rounded-full bg-[var(--teal)]/15 blur-2xl"
-        />
-        <div
-          aria-hidden
-          className="hero-orb-delayed pointer-events-none absolute -left-10 top-16 size-32 rounded-full bg-[#9fd0c8]/25 blur-2xl"
-        />
-
-        <div className="relative animate-rise space-y-4">
-          <h1 className="font-[family-name:var(--font-display)] text-5xl leading-[0.95] tracking-tight text-[var(--ink)] sm:text-6xl">
-            Lactarium
+      <section className="animate-rise relative space-y-5 pt-2">
+        <div className="space-y-2">
+          <p className="text-sm font-medium uppercase tracking-[0.18em] text-[var(--ink-muted)]">
+            {greeting}
+          </p>
+          <h1 className="font-display text-5xl leading-[0.95] tracking-tight text-[var(--rose-deep)] sm:text-6xl">
+            Lactæ
           </h1>
-          <Link
-            href="/ajouter"
-            className="mt-2 inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-[var(--teal)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--teal-deep)]"
-          >
-            <Plus className="size-4" />
-            Ajouter un tirage
-          </Link>
+          <p className="max-w-sm text-sm leading-relaxed text-[var(--ink-muted)]">
+            Suivi doux de vos tirages — objectif {advice.targetMl} ml sur 24 h.
+          </p>
         </div>
+
+        <Link
+          href="/ajouter"
+          className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--rose-dust)] px-6 text-sm font-medium text-[var(--primary-foreground)] shadow-[0_10px_24px_rgb(201_145_143_/_0.28)] transition-colors hover:bg-[var(--rose-deep)]"
+        >
+          <Plus className="size-4" />
+          Ajouter un tirage
+        </Link>
       </section>
 
       <DashboardPanel advice={advice} />
 
-      <div className="h-px bg-[var(--line)]" />
-
       <section className="space-y-4">
-        <div className="flex items-end justify-between gap-3">
-          <h2 className="font-[family-name:var(--font-display)] text-2xl text-[var(--ink)]">
+        <div className="flex items-end justify-between gap-3 px-1">
+          <h2 className="font-display text-3xl text-[var(--ink)]">
             Trois derniers jours
           </h2>
           <Link
             href="/calendrier"
-            className="text-sm font-medium text-[var(--teal-deep)] underline-offset-4 hover:underline"
+            className="text-sm font-medium text-[var(--rose-deep)] underline-offset-4 hover:underline"
           >
             Voir plus
           </Link>

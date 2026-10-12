@@ -2,43 +2,52 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { CalendarDays, Home, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { href: "/", label: "Accueil" },
-  { href: "/ajouter", label: "Ajouter" },
-  { href: "/calendrier", label: "Calendrier" },
+  { href: "/", label: "Accueil", icon: Home },
+  { href: "/ajouter", label: "Ajouter", icon: Plus },
+  { href: "/calendrier", label: "Calendrier", icon: CalendarDays },
 ];
 
 export function SiteHeader() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--line)]/70 bg-[color-mix(in_oklab,var(--cream)_82%,transparent)] backdrop-blur-md">
-      <div className="mx-auto flex max-w-lg items-center justify-between gap-4 px-4 py-3">
-        <Link href="/" className="group flex items-baseline gap-2">
-          <span className="font-[family-name:var(--font-display)] text-xl tracking-tight text-[var(--ink)] transition-colors group-hover:text-[var(--teal)]">
-            Lactarium
+    <header className="page-shell sticky top-0 z-40">
+      <div className="mx-auto flex max-w-lg items-center justify-between gap-3 px-4 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <Link href="/" className="group min-w-0">
+          <span className="font-display text-2xl tracking-tight text-[var(--rose-deep)] transition-colors group-hover:text-[var(--rose-dust)]">
+            Lactæ
           </span>
         </Link>
-        <nav className="flex items-center gap-1 text-sm">
+
+        <nav
+          aria-label="Navigation principale"
+          className="surface-card flex items-center gap-1 rounded-full p-1"
+        >
           {links.map((link) => {
             const active =
               link.href === "/"
                 ? pathname === "/"
                 : pathname.startsWith(link.href);
+            const Icon = link.icon;
             return (
               <Link
                 key={link.href}
                 href={link.href}
+                aria-label={link.label}
+                aria-current={active ? "page" : undefined}
                 className={cn(
-                  "rounded-md px-2.5 py-1.5 transition-colors",
+                  "inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition-colors",
                   active
-                    ? "bg-[var(--teal-soft)] text-[var(--teal-deep)]"
-                    : "text-[var(--ink-muted)] hover:bg-white/50 hover:text-[var(--ink)]",
+                    ? "bg-[var(--rose-dust)] text-[var(--primary-foreground)] shadow-sm"
+                    : "text-[var(--ink-muted)] hover:bg-[var(--blush)] hover:text-[var(--ink)]",
                 )}
               >
-                {link.label}
+                <Icon className="size-3.5" aria-hidden />
+                <span className="hidden sm:inline">{link.label}</span>
               </Link>
             );
           })}

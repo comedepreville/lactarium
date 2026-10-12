@@ -1,7 +1,7 @@
 export function DeveloperCredit() {
   return (
-    <p className="mt-10 text-center text-xs tracking-wide text-[var(--ink-muted)]">
-      Côme de Préville
+    <p className="mt-12 text-center text-xs leading-relaxed tracking-wide text-[var(--ink-muted)]/80">
+      Développé avec ❤️ par Côme et Jeanne de Préville
     </p>
   );
 }

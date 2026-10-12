@@ -1,27 +1,30 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Manrope } from "next/font/google";
+import { Cormorant_Garamond, DM_Sans } from "next/font/google";
+import { Atmosphere } from "@/components/atmosphere";
 import { PwaRegister } from "@/components/pwa-register";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
 
-const display = Fraunces({
+const display = Cormorant_Garamond({
   variable: "--font-display",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const body = Manrope({
+const body = DM_Sans({
   variable: "--font-body",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "Lactarium",
+  title: "Lactæ",
   description: "Suivi des tirages de lait — cible 800 ml / 24 h",
-  applicationName: "Lactarium",
+  applicationName: "Lactae",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Lactarium",
+    title: "Lactæ",
   },
   formatDetection: {
     telephone: false,
@@ -37,7 +40,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#2a8f8c",
+  themeColor: "#c9918f",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -50,10 +53,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="fr"
       className={`${display.variable} ${body.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col font-[family-name:var(--font-body)]">
+      <body className="font-body relative flex min-h-full flex-col">
+        <Atmosphere />
         <PwaRegister />
         <SiteHeader />
-        <main className="mx-auto w-full max-w-lg flex-1 px-4 pb-16 pt-6">
+        <main className="page-shell mx-auto w-full max-w-lg flex-1 px-4 pb-20 pt-5">
           {children}
         </main>
       </body>

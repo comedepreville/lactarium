@@ -2,19 +2,19 @@
 
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
+import { CircularGauge } from "@/components/circular-gauge";
 import type { DashboardAdvice } from "@/lib/types";
 import { formatParisTime, TARGET_ML_24H } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
 const statusStyles = {
-  ok: "border-[var(--teal)]/30 bg-[var(--teal-soft)] text-[var(--teal-deep)]",
-  behind: "border-amber-500/30 bg-amber-50 text-amber-900",
-  ahead: "border-rose-400/30 bg-rose-50 text-rose-900",
-  overdue: "border-rose-500/40 bg-rose-50 text-rose-950",
+  ok: "bg-[var(--blush)] text-[var(--rose-deep)]",
+  behind: "bg-[#f7ebe0] text-[#8a5a3c]",
+  ahead: "bg-[#f6e4e8] text-[var(--rose-deep)]",
+  overdue: "bg-[#f3ddd8] text-[#7a3f3d]",
 };
 
 export function DashboardPanel({ advice }: { advice: DashboardAdvice }) {
-  const progress = Math.min(100, (advice.drawnMl24h / TARGET_ML_24H) * 100);
   const nextAt = advice.nextSuggestedAt;
   const overdue = nextAt ? isOverdue(nextAt) : false;
 
@@ -26,65 +26,65 @@ export function DashboardPanel({ advice }: { advice: DashboardAdvice }) {
 
   const clockLabel = nextAt ? `à ${formatParisTime(nextAt)}` : "";
 
+  const avgLabel =
+    advice.avgMlPerTirage48h > 0
+      ? `${advice.avgMlPerTirage48h} ml`
+      : advice.avgMlPerTirage24h > 0
+        ? `${advice.avgMlPerTirage24h} ml`
+        : "—";
+
   return (
     <section
-      className="animate-rise space-y-5"
+      className="animate-rise space-y-6"
       style={{ animationDelay: "80ms" }}
       aria-label="Résumé"
     >
-      <div className="flex items-end justify-between gap-3">
-        <p className="font-[family-name:var(--font-display)] text-4xl tracking-tight text-[var(--ink)]">
-          {advice.drawnMl24h}
-          <span className="ml-1 text-lg text-[var(--ink-muted)]">
-            / {advice.targetMl} ml
-          </span>
-        </p>
-        <p className="text-right text-sm font-medium text-[var(--ink)]">
-          {advice.tirageCount24h} tirage
-          {advice.tirageCount24h !== 1 ? "s" : ""}
-        </p>
+      <div className="surface-card rounded-[2rem] px-4 py-8 sm:px-6">
+        <CircularGauge
+          value={advice.drawnMl24h}
+          max={advice.targetMl || TARGET_ML_24H}
+          label="sur 24 h"
+        />
+
+        <div className="mt-8 grid grid-cols-3 gap-2 sm:gap-3">
+          <Metric
+            label="Tirages"
+            value={`${advice.tirageCount24h}`}
+            hint="sur 24 h"
+          />
+          <Metric
+            label="Restant"
+            value={`${advice.remainingMl}`}
+            hint="ml"
+          />
+          <Metric label="Moyenne" value={avgLabel.replace(" ml", "")} hint="ml" />
+        </div>
       </div>
 
-      <div className="h-2 overflow-hidden rounded-full bg-white/70">
-        <div
-          className="h-full rounded-full bg-[var(--teal)] transition-[width] duration-700 ease-out"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <Metric
-          label="Restant"
-          value={`${advice.remainingMl} ml`}
-          hint={`≈ ${advice.remainingTiragesEstimate} tirage${advice.remainingTiragesEstimate > 1 ? "s" : ""}`}
-        />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Metric
           label="Prochain tirage"
           value={delayLabel}
           hint={clockLabel}
+          large
         />
         <Metric
-          label="Moyenne"
-          value={
-            advice.avgMlPerTirage48h > 0
-              ? `${advice.avgMlPerTirage48h} ml`
-              : advice.avgMlPerTirage24h > 0
-                ? `${advice.avgMlPerTirage24h} ml`
-                : "—"
-          }
-          className="col-span-2 sm:col-span-1"
+          label="Encore"
+          value={`${advice.remainingTiragesEstimate}`}
+          hint={`tirage${advice.remainingTiragesEstimate > 1 ? "s" : ""} estimé${advice.remainingTiragesEstimate > 1 ? "s" : ""}`}
+          large
         />
       </div>
 
       {advice.lastTirageAt && (
-        <p className="text-sm text-[var(--ink-muted)]">
+        <p className="text-center text-sm text-[var(--ink-muted)]">
           Dernier tirage à {formatParisTime(advice.lastTirageAt)}
         </p>
       )}
 
       <div
         className={cn(
-          "rounded-xl border px-4 py-3 text-sm leading-relaxed",
+          "rounded-full px-5 py-3.5 text-center text-sm leading-relaxed",
           statusStyles[advice.status],
         )}
       >
@@ -98,24 +98,32 @@ function Metric({
   label,
   value,
   hint,
+  large = false,
   className,
 }: {
   label: string;
   value: string;
   hint?: string;
+  large?: boolean;
   className?: string;
 }) {
   return (
     <div
       className={cn(
-        "rounded-xl bg-white/55 px-3 py-3 ring-1 ring-[var(--line)]",
+        "rounded-[1.5rem] bg-[var(--blush)]/70 px-3 py-3 text-center",
+        large && "surface-card bg-[var(--surface)] px-4 py-4 text-left",
         className,
       )}
     >
-      <p className="text-xs uppercase tracking-wide text-[var(--ink-muted)]">
+      <p className="text-[0.7rem] font-medium uppercase tracking-[0.14em] text-[var(--ink-muted)]">
         {label}
       </p>
-      <p className="mt-1 font-[family-name:var(--font-display)] text-lg text-[var(--ink)]">
+      <p
+        className={cn(
+          "mt-1 font-body font-medium tabular-nums text-[var(--ink)]",
+          large ? "text-2xl" : "text-xl",
+        )}
+      >
         {value}
       </p>
       {hint ? (

@@ -1,11 +1,11 @@
 {
-  "name": "Lactarium",
-  "short_name": "Lactarium",
+  "name": "Lactæ",
+  "short_name": "Lactae",
   "description": "Suivi des tirages de lait — cible 800 ml / 24 h",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#eef6f7",
-  "theme_color": "#2a8f8c",
+  "background_color": "#faf6f2",
+  "theme_color": "#c9918f",
   "lang": "fr",
   "orientation": "portrait-primary",
   "icons": [

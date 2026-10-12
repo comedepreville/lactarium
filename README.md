@@ -1,4 +1,4 @@
-# Lactarium
+# Lactæ (Lactae)
 
 PWA de suivi des tirages de lait — cible **800 ml / 24 h**, espacement max 6 h le jour / 5 h la nuit.
 
@@ -56,7 +56,7 @@ npm run dev   # http://localhost:3847
    - `GOOGLE_SERVICE_ACCOUNT_EMAIL`
    - `GOOGLE_PRIVATE_KEY` (avec `\n` pour les retours à la ligne)
 
-Au premier accès, Lactarium crée l’onglet `Tirages` avec les colonnes `id | datetime | quantityMl`.
+Au premier accès, Lactae crée l’onglet `Tirages` avec les colonnes `id | datetime | quantityMl`.
 
 Sans ces variables, l’app écrit dans `data/tirages.json` (ou `/data` en Docker).
 
