@@ -18,13 +18,13 @@ const body = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Lactarium",
+  title: "Lactæ",
   description: "Suivi des tirages de lait — cible 800 ml / 24 h",
-  applicationName: "Lactarium",
+  applicationName: "Lactae",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Lactarium",
+    title: "Lactæ",
   },
   formatDetection: {
     telephone: false,
