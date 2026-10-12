@@ -90,7 +90,7 @@ export function DashboardPanel({ advice }: { advice: DashboardAdvice }) {
 
       <div
         className={cn(
-          "rounded-full px-5 py-3.5 text-center text-sm leading-relaxed",
+          "rounded-2xl px-5 py-3.5 text-center text-sm leading-relaxed text-balance",
           statusStyles[advice.status],
         )}
       >
