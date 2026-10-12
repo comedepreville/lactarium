@@ -1,4 +1,5 @@
 import {
+  addDays,
   addHours,
   differenceInMinutes,
   format,
@@ -14,6 +15,9 @@ export const TZ = "Europe/Paris";
 export const TARGET_ML_24H = 800;
 export const MAX_GAP_DAY_HOURS = 6;
 export const MAX_GAP_NIGHT_HOURS = 5;
+/** Cadence suggérée : plancher / plafond (heures) */
+export const MIN_INTERVAL_HOURS = 1;
+export const MAX_INTERVAL_HOURS = 5;
 /** Night window in Europe/Paris local hours: 22:00 → 06:00 */
 export const NIGHT_START_HOUR = 22;
 export const NIGHT_END_HOUR = 6;
@@ -129,4 +133,15 @@ export function rollingWindowStart(hours: number): Date {
 
 export function startOfParisDay(date = new Date()): Date {
   return fromZonedTime(startOfDay(toParis(date)), TZ);
+}
+
+/** Début du jour calendaire Paris suivant (équivalent fin de journée courante). */
+export function startOfNextParisDay(date = new Date()): Date {
+  return fromZonedTime(startOfDay(addDays(toParis(date), 1)), TZ);
+}
+
+/** Heures restantes jusqu’à minuit Europe/Paris (peut être fractionnaire). */
+export function hoursUntilEndOfParisDay(date = new Date()): number {
+  const end = startOfNextParisDay(date).getTime();
+  return Math.max(0, (end - date.getTime()) / (1000 * 60 * 60));
 }

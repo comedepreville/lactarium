@@ -1,16 +1,18 @@
 import { addHours, parseISO } from "date-fns";
 import type { DashboardAdvice, DaySummary, Tirage, TirageWithGap } from "./types";
 import {
+  MAX_INTERVAL_HOURS,
+  MIN_INTERVAL_HOURS,
   TARGET_ML_24H,
   formatParisDate,
   formatParisDateShort,
-  isPast,
+  hoursUntilEndOfParisDay,
   isNightAt,
-  maxGapHoursAt,
   minutesBetween,
   parisDateKey,
-  rollingWindowStart,
 } from "./time";
+
+const FALLBACK_AVG_ML = 100;
 
 function sortAsc(tirages: Tirage[]): Tirage[] {
   return [...tirages].sort(
@@ -65,73 +67,86 @@ function avgQuantity(tirages: Tirage[]): number {
   return Math.round(sum / tirages.length);
 }
 
-function inLastHours(tirages: Tirage[], hours: number): Tirage[] {
-  const start = rollingWindowStart(hours).getTime();
-  return tirages.filter((t) => parseISO(t.datetime).getTime() >= start);
+/** Moyenne des N derniers tirages, toutes journées confondues. */
+export function averageLastNTirages(tirages: Tirage[], n: number): number {
+  const lastN = sortDesc(tirages).slice(0, n);
+  if (lastN.length === 0) return FALLBACK_AVG_ML;
+  return avgQuantity(lastN);
 }
 
 /**
- * Cadence pour atteindre 800 ml :
- * intervalle = 24 h / nb de tirages encore nécessaires (d’après la moyenne observée),
- * plafonné au max jour (6 h) / nuit (5 h).
+ * Tirages restants aujourd’hui :
+ * ceil((objectif − déjà tiré aujourd’hui) / moyenne des 3 derniers tirages).
  */
-function cadenceIntervalHours(
-  remainingTirages: number,
-  recommendedPerDay: number,
-  maxGapHours: number,
+export function estimateRemainingTirages(
+  remainingMl: number,
+  avgMlPerTirage: number,
 ): number {
-  const divisor =
-    remainingTirages > 0 ? remainingTirages : Math.max(1, recommendedPerDay);
-  const raw = 24 / divisor;
-  return Math.min(raw, maxGapHours);
+  if (remainingMl <= 0) return 0;
+  return Math.max(1, Math.ceil(remainingMl / Math.max(avgMlPerTirage, 10)));
+}
+
+/**
+ * Intervalle jusqu’au prochain tirage :
+ * temps restant aujourd’hui / tirages restants, borné entre 1 h et 5 h.
+ */
+export function suggestIntervalHours(
+  hoursLeftToday: number,
+  remainingTirages: number,
+): { hours: number | null; cappedHigh: boolean } {
+  if (remainingTirages <= 0) {
+    return { hours: null, cappedHigh: false };
+  }
+  const raw = hoursLeftToday / remainingTirages;
+  const cappedHigh = raw > MAX_INTERVAL_HOURS;
+  const hours = Math.min(
+    MAX_INTERVAL_HOURS,
+    Math.max(MIN_INTERVAL_HOURS, raw),
+  );
+  return { hours, cappedHigh };
 }
 
 export function computeDashboard(tirages: Tirage[]): DashboardAdvice {
-  const last24 = inLastHours(tirages, 24);
-  const last48 = inLastHours(tirages, 48);
-  const drawnMl24h = last24.reduce((s, t) => s + t.quantityMl, 0);
-  const remainingMl = Math.max(0, TARGET_ML_24H - drawnMl24h);
-  const avgMlPerTirage24h = avgQuantity(last24);
-  const avgMlPerTirage48h = avgQuantity(last48);
+  const now = new Date();
+  const todayKey = parisDateKey(now);
+  const todayTirages = tirages.filter(
+    (t) => parisDateKey(t.datetime) === todayKey,
+  );
 
-  const referenceAvg =
-    last48.length >= 2
-      ? avgMlPerTirage48h
-      : last24.length >= 1
-        ? avgMlPerTirage24h
-        : 100;
+  const drawnMlToday = todayTirages.reduce((s, t) => s + t.quantityMl, 0);
+  const remainingMl = Math.max(0, TARGET_ML_24H - drawnMlToday);
 
+  const avgMlLast3 = averageLastNTirages(tirages, 3);
+  const remainingTiragesEstimate = estimateRemainingTirages(
+    remainingMl,
+    avgMlLast3,
+  );
   const recommendedTiragesPerDay = Math.max(
     1,
-    Math.ceil(TARGET_ML_24H / Math.max(referenceAvg, 10)),
+    Math.ceil(TARGET_ML_24H / Math.max(avgMlLast3, 10)),
   );
-  const remainingTiragesEstimate =
-    remainingMl === 0
-      ? 0
-      : Math.max(1, Math.ceil(remainingMl / Math.max(referenceAvg, 10)));
 
   const sorted = sortDesc(tirages);
   const last = sorted[0] ?? null;
   const lastTirageAt = last?.datetime ?? null;
 
-  const anchor = lastTirageAt ? parseISO(lastTirageAt) : new Date();
-  const maxGapHours = maxGapHoursAt(anchor);
-  const isNightWindow = isNightAt(anchor);
+  const hoursLeftToday = hoursUntilEndOfParisDay(now);
+  const { hours: suggestedIntervalHours, cappedHigh: intervalCappedHigh } =
+    suggestIntervalHours(hoursLeftToday, remainingTiragesEstimate);
 
-  const suggestedIntervalHours = cadenceIntervalHours(
-    remainingTiragesEstimate,
-    recommendedTiragesPerDay,
-    maxGapHours,
-  );
+  const nextSuggestedAt =
+    suggestedIntervalHours == null
+      ? null
+      : addHours(now, suggestedIntervalHours).toISOString();
 
-  const nextSuggestedAt = addHours(
-    anchor,
-    suggestedIntervalHours,
-  ).toISOString();
+  const isNightWindow = isNightAt(now);
+  const maxGapHours = MAX_INTERVAL_HOURS;
 
-  const maxDeadlineAt = addHours(anchor, maxGapHours).toISOString();
-  const cadenceOverdue = isPast(nextSuggestedAt);
-  const maxGapOverdue = lastTirageAt ? isPast(maxDeadlineAt) : false;
+  const hoursSinceLast = lastTirageAt
+    ? (now.getTime() - parseISO(lastTirageAt).getTime()) / (1000 * 60 * 60)
+    : null;
+  const maxGapOverdue =
+    hoursSinceLast != null && hoursSinceLast >= MAX_INTERVAL_HOURS;
 
   let status: DashboardAdvice["status"] = "ok";
   let message = "";
@@ -139,38 +154,41 @@ export function computeDashboard(tirages: Tirage[]): DashboardAdvice {
   if (!lastTirageAt) {
     status = "behind";
     message = "Aucun tirage enregistré.";
-  } else if (maxGapOverdue) {
+  } else if (maxGapOverdue && remainingMl > 0) {
     status = "overdue";
-    message = `Délai max dépassé (${maxGapHours} h). Tirez maintenant.`;
-  } else if (cadenceOverdue && remainingMl > 0) {
-    status = "overdue";
-    message = "Cadence en retard pour la cible 800 ml. Tirez bientôt.";
-  } else if (drawnMl24h > TARGET_ML_24H + 100) {
+    message = `Plus de ${MAX_INTERVAL_HOURS} h depuis le dernier tirage. Risque d’engorgement voire de mastite.`;
+  } else if (intervalCappedHigh && remainingMl > 0) {
+    status = "behind";
+    message = `Intervalle plafonné à ${MAX_INTERVAL_HOURS} h : sinon risque d’engorgement voire de mastite.`;
+  } else if (drawnMlToday > TARGET_ML_24H + 100) {
     status = "ahead";
-    message = `Volume élevé (${drawnMl24h} ml). Risque de surstimulation.`;
-  } else if (drawnMl24h < TARGET_ML_24H * 0.7 && last24.length > 0) {
+    message = `Volume élevé (${drawnMlToday} ml). Risque de surstimulation.`;
+  } else if (drawnMlToday >= TARGET_ML_24H) {
+    status = "ok";
+    message = `Cible atteinte (${drawnMlToday} ml).`;
+  } else if (drawnMlToday < TARGET_ML_24H * 0.7 && todayTirages.length > 0) {
     status = "behind";
     message = `${remainingMl} ml restants ≈ ${remainingTiragesEstimate} tirage${remainingTiragesEstimate > 1 ? "s" : ""}.`;
-  } else if (drawnMl24h >= TARGET_ML_24H) {
-    status = "ok";
-    message = `Cible atteinte (${drawnMl24h} ml).`;
   } else {
     status = "ok";
-    message = `${remainingMl} ml restants ≈ ${remainingTiragesEstimate} tirage${remainingTiragesEstimate > 1 ? "s" : ""}.`;
+    message =
+      remainingTiragesEstimate > 0
+        ? `${remainingMl} ml restants ≈ ${remainingTiragesEstimate} tirage${remainingTiragesEstimate > 1 ? "s" : ""}.`
+        : `Cible atteinte (${drawnMlToday} ml).`;
   }
 
   return {
     targetMl: TARGET_ML_24H,
-    drawnMl24h,
+    drawnMlToday,
     remainingMl,
-    tirageCount24h: last24.length,
-    avgMlPerTirage24h,
-    avgMlPerTirage48h,
+    tirageCountToday: todayTirages.length,
+    avgMlLast3,
     recommendedTiragesPerDay,
     remainingTiragesEstimate,
     lastTirageAt,
     nextSuggestedAt,
     suggestedIntervalHours,
+    intervalCappedHigh,
     maxGapHours,
     isNightWindow,
     status,

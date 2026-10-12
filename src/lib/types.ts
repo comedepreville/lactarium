@@ -19,18 +19,21 @@ export type TirageWithGap = Tirage & {
 
 export type DashboardAdvice = {
   targetMl: number;
-  drawnMl24h: number;
+  /** Volume déjà tiré sur la journée calendaire Europe/Paris */
+  drawnMlToday: number;
   remainingMl: number;
-  tirageCount24h: number;
-  avgMlPerTirage24h: number;
-  avgMlPerTirage48h: number;
+  tirageCountToday: number;
+  /** Moyenne glissante des 3 derniers tirages (cross-day) */
+  avgMlLast3: number;
   recommendedTiragesPerDay: number;
   remainingTiragesEstimate: number;
   lastTirageAt: string | null;
-  /** Cadence: prochain tirage recommandé (ISO) */
+  /** Prochain tirage recommandé (ISO), null si objectif du jour atteint */
   nextSuggestedAt: string | null;
-  /** Intervalle de cadence en heures (24h / tirages restants), plafonné au max jour/nuit */
+  /** Intervalle suggéré en heures, borné entre 1 h et 5 h */
   suggestedIntervalHours: number | null;
+  /** true si le calcul brut dépassait 5 h (plafond appliqué) */
+  intervalCappedHigh: boolean;
   maxGapHours: number;
   isNightWindow: boolean;
   status: "ok" | "behind" | "ahead" | "overdue";

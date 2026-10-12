@@ -33,7 +33,7 @@ export default async function HomePage() {
             Lactæ
           </h1>
           <p className="max-w-sm text-sm leading-relaxed text-[var(--ink-muted)]">
-            Suivi doux de vos tirages — objectif {advice.targetMl} ml sur 24 h.
+            Suivi doux de vos tirages — objectif {advice.targetMl} ml aujourd’hui.
           </p>
         </div>
 
