@@ -16,7 +16,7 @@ export function DayList({
 }) {
   if (days.length === 0) {
     return (
-      <p className="rounded-xl bg-white/50 px-4 py-8 text-center text-sm text-[var(--ink-muted)] ring-1 ring-[var(--line)]">
+      <p className="surface-card rounded-[2rem] px-5 py-10 text-center text-sm text-[var(--ink-muted)]">
         {emptyMessage}
       </p>
     );
@@ -27,36 +27,38 @@ export function DayList({
       {days.map((day, index) => (
         <article
           key={day.dateKey}
-          className="animate-rise overflow-hidden rounded-2xl bg-white/60 ring-1 ring-[var(--line)]"
+          className="surface-card animate-rise overflow-hidden rounded-[2rem]"
           style={{ animationDelay: `${120 + index * 60}ms` }}
         >
-          <header className="flex items-baseline justify-between gap-3 border-b border-[var(--line)] px-4 py-3">
+          <header className="flex items-baseline justify-between gap-3 px-5 pb-3 pt-5">
             <div>
-              <h3 className="font-[family-name:var(--font-display)] text-lg capitalize text-[var(--ink)]">
+              <h3 className="font-display text-2xl capitalize text-[var(--ink)]">
                 {day.label}
               </h3>
-              <p className="text-xs text-[var(--ink-muted)]">
+              <p className="mt-0.5 text-xs text-[var(--ink-muted)]">
                 {day.count} tirage{day.count > 1 ? "s" : ""}
               </p>
             </div>
-            <p className="font-[family-name:var(--font-display)] text-xl text-[var(--teal-deep)]">
-              {day.totalMl}{" "}
-              <span className="text-sm font-sans text-[var(--ink-muted)]">
+            <p className="font-body text-2xl font-medium tabular-nums text-[var(--rose-deep)]">
+              {day.totalMl}
+              <span className="ml-1 text-sm font-normal text-[var(--ink-muted)]">
                 ml
               </span>
             </p>
           </header>
-          <ul className="divide-y divide-[var(--line)]">
+          <ul className="divide-y divide-[var(--line)]/80 px-2 pb-2">
             {day.tirages.map((t) => (
               <li
                 key={t.id}
-                className="flex items-center justify-between gap-3 px-4 py-3"
+                className="flex items-center justify-between gap-3 rounded-[1.25rem] px-3 py-3.5"
               >
                 <div>
-                  <p className="font-medium text-[var(--ink)]">
-                    {formatParisTime(t.datetime)} · {t.quantityMl} ml
+                  <p className="font-medium tabular-nums text-[var(--ink)]">
+                    {formatParisTime(t.datetime)}
+                    <span className="mx-1.5 text-[var(--rose-mist)]">·</span>
+                    {t.quantityMl} ml
                   </p>
-                  <p className="text-xs text-[var(--ink-muted)]">
+                  <p className="mt-0.5 text-xs text-[var(--ink-muted)]">
                     Écart précédent : {formatGap(t.gapMinutes)}
                   </p>
                 </div>
@@ -64,7 +66,7 @@ export function DayList({
                   <Link
                     href={`/ajouter?id=${t.id}`}
                     aria-label="Modifier le tirage"
-                    className="inline-flex size-8 items-center justify-center rounded-lg text-[var(--ink-muted)] transition-colors hover:bg-[var(--mist)] hover:text-[var(--teal-deep)]"
+                    className="inline-flex size-10 items-center justify-center rounded-full text-[var(--ink-muted)] transition-colors hover:bg-[var(--blush)] hover:text-[var(--rose-deep)]"
                   >
                     <Pencil className="size-4" />
                   </Link>

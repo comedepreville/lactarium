@@ -15,10 +15,16 @@ export default async function AjouterPage({ searchParams }: Props) {
 
   return (
     <div className="space-y-6">
-      <header className="animate-rise">
-        <h1 className="font-[family-name:var(--font-display)] text-4xl tracking-tight text-[var(--ink)]">
+      <header className="animate-rise space-y-2 px-1">
+        <p className="text-sm font-medium uppercase tracking-[0.18em] text-[var(--ink-muted)]">
+          {mode === "edit" ? "Édition" : "Nouveau"}
+        </p>
+        <h1 className="font-display text-4xl tracking-tight text-[var(--rose-deep)] sm:text-5xl">
           {mode === "edit" ? "Modifier un tirage" : "Ajouter un tirage"}
         </h1>
+        <p className="text-sm text-[var(--ink-muted)]">
+          Heure à Paris, quantités par pas de 10 ml.
+        </p>
       </header>
 
       <TirageForm
