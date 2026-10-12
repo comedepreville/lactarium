@@ -7,6 +7,7 @@ PWA de suivi des tirages de lait — cible **800 ml / 24 h**, espacement max 6 h
 - **Accueil** : dashboard du jour (volume 24 h, tirages restants, délai avant prochain tirage) + 3 derniers jours
 - **Ajouter / modifier** un tirage (heure Paris par pas de 10 min, quantité par pas de 10 ml)
 - **Calendrier** : historique complet avec édition
+- **Journal de vie** : fil d’événements groupés par jour (texte + date/heure), ajout / édition / suppression
 - **Backend** : Google Sheets si configuré, sinon JSON local
 - **PWA** : installable, mode autonome
 
@@ -56,9 +57,9 @@ npm run dev   # http://localhost:3847
    - `GOOGLE_SERVICE_ACCOUNT_EMAIL`
    - `GOOGLE_PRIVATE_KEY` (avec `\n` pour les retours à la ligne)
 
-Au premier accès, Lactae crée l’onglet `Tirages` avec les colonnes `id | datetime | quantityMl`.
+Au premier accès, Lactae crée l’onglet `Tirages` (`id | datetime | quantityMl`) et, pour le journal, l’onglet `Journal` (`id | datetime | text`).
 
-Sans ces variables, l’app écrit dans `data/tirages.json` (ou `/data` en Docker).
+Sans ces variables, l’app écrit dans `data/tirages.json` et `data/journal.json` (ou `/data` en Docker).
 
 ## Stack
 

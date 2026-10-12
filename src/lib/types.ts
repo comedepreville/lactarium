@@ -5,6 +5,20 @@ export type Tirage = {
   quantityMl: number;
 };
 
+export type JournalEntry = {
+  id: string;
+  /** ISO datetime in UTC; displayed in Europe/Paris */
+  datetime: string;
+  text: string;
+};
+
+export type JournalDaySummary = {
+  dateKey: string;
+  label: string;
+  count: number;
+  entries: JournalEntry[];
+};
+
 export type DaySummary = {
   dateKey: string;
   label: string;
