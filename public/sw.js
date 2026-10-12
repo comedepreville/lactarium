@@ -1,5 +1,13 @@
-const CACHE = "lactae-v1";
-const ASSETS = ["/", "/ajouter", "/calendrier", "/manifest.webmanifest"];
+const CACHE = "lactae-v2";
+const ASSETS = [
+  "/",
+  "/ajouter",
+  "/calendrier",
+  "/manifest.webmanifest",
+  "/favicon.svg",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
