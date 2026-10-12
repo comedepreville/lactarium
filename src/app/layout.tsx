@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   applicationName: "Lactae",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "Lactæ",
   },
   formatDetection: {

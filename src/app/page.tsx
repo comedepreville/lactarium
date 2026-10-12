@@ -39,7 +39,7 @@ export default async function HomePage() {
 
         <Link
           href="/ajouter"
-          className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--rose-dust)] px-6 text-sm font-medium text-[var(--primary-foreground)] shadow-[0_10px_24px_rgb(201_145_143_/_0.28)] transition-colors hover:bg-[var(--rose-deep)]"
+          className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--rose-dust)] px-6 text-sm font-medium text-[var(--primary-foreground)] shadow-[0_10px_24px_rgb(143_94_92_/_0.28)] transition-colors hover:bg-[var(--rose-deep)]"
         >
           <Plus className="size-4" />
           Ajouter un tirage

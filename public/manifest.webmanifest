@@ -4,7 +4,7 @@
   "description": "Suivi des tirages de lait — cible 800 ml / 24 h",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#faf6f2",
+  "background_color": "#c9918f",
   "theme_color": "#c9918f",
   "lang": "fr",
   "orientation": "portrait-primary",

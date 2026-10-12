@@ -1,4 +1,4 @@
-const CACHE = "lactae-v2";
+const CACHE = "lactae-v3";
 const ASSETS = [
   "/",
   "/ajouter",

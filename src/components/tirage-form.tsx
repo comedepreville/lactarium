@@ -153,7 +153,7 @@ export function TirageForm({
       </div>
 
       {error && (
-        <p className="rounded-full bg-[#f3ddd8] px-4 py-3 text-sm text-[#7a3f3d]">
+        <p className="rounded-full bg-[#a86f6c] px-4 py-3 text-sm text-[var(--cream)]">
           {error}
         </p>
       )}

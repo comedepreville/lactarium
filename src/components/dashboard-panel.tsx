@@ -8,10 +8,10 @@ import { formatParisTime, TARGET_ML_24H } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
 const statusStyles = {
-  ok: "bg-[var(--blush)] text-[var(--rose-deep)]",
-  behind: "bg-[#f7ebe0] text-[#8a5a3c]",
-  ahead: "bg-[#f6e4e8] text-[var(--rose-deep)]",
-  overdue: "bg-[#f3ddd8] text-[#7a3f3d]",
+  ok: "bg-[var(--blush)] text-[var(--cream)]",
+  behind: "bg-[#c9a08a] text-[var(--cream)]",
+  ahead: "bg-[#be8582] text-[var(--cream)]",
+  overdue: "bg-[#a86f6c] text-[var(--cream)]",
 };
 
 export function DashboardPanel({ advice }: { advice: DashboardAdvice }) {
