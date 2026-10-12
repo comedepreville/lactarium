@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useId, useMemo, useState, useTransition } from "react";
+import { CircularVolumeSlider } from "@/components/circular-volume-slider";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
-  generateTimeOptions,
   nowParis,
   parisDateKey,
   parisLocalToISO,
@@ -14,8 +14,14 @@ import {
 import { format } from "date-fns";
 import { Loader2, Trash2 } from "lucide-react";
 
-const QUANTITIES = Array.from({ length: 40 }, (_, i) => (i + 1) * 10);
-const TIME_OPTIONS = generateTimeOptions();
+const VOLUME_MIN = 0;
+const VOLUME_MAX = 300;
+const VOLUME_STEP = 10;
+
+function snapVolume(n: number) {
+  const snapped = Math.round(n / VOLUME_STEP) * VOLUME_STEP;
+  return Math.min(VOLUME_MAX, Math.max(VOLUME_MIN, snapped));
+}
 
 type Props = {
   mode: "create" | "edit";
@@ -32,6 +38,7 @@ export function TirageForm({
 }: Props) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const volumeLabelId = useId();
 
   const defaults = useMemo(() => {
     const iso = initialDatetime ?? roundToTenMinutesISO();
@@ -39,7 +46,7 @@ export function TirageForm({
     return {
       dateKey: parisDateKey(iso),
       time: format(paris, "HH:mm"),
-      quantity: initialQuantityMl,
+      quantity: snapVolume(initialQuantityMl),
     };
   }, [initialDatetime, initialQuantityMl]);
 
@@ -50,7 +57,12 @@ export function TirageForm({
   function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    const datetime = parisLocalToISO(dateKey, time);
+    if (quantity < VOLUME_STEP) {
+      setError("Choisissez un volume d’au moins 10 ml.");
+      return;
+    }
+    const timeHHmm = time.slice(0, 5);
+    const datetime = parisLocalToISO(dateKey, timeHHmm);
 
     startTransition(async () => {
       try {
@@ -118,38 +130,28 @@ export function TirageForm({
         <Label htmlFor="time" className="text-[var(--ink-muted)]">
           Heure
         </Label>
-        <select
+        <input
           id="time"
-          value={time}
+          type="time"
+          value={time.slice(0, 5)}
           onChange={(e) => setTime(e.target.value)}
-          className="pill-field appearance-none"
+          className="pill-field"
           required
-        >
-          {TIME_OPTIONS.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
+        />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="qty" className="text-[var(--ink-muted)]">
-          Quantité (ml)
+      <div className="space-y-3">
+        <Label id={volumeLabelId} className="text-[var(--ink-muted)]">
+          Volume (ml)
         </Label>
-        <select
-          id="qty"
+        <CircularVolumeSlider
           value={quantity}
-          onChange={(e) => setQuantity(Number(e.target.value))}
-          className="pill-field appearance-none"
-          required
-        >
-          {QUANTITIES.map((q) => (
-            <option key={q} value={q}>
-              {q} ml
-            </option>
-          ))}
-        </select>
+          onChange={setQuantity}
+          min={VOLUME_MIN}
+          max={VOLUME_MAX}
+          step={VOLUME_STEP}
+          aria-labelledby={volumeLabelId}
+        />
       </div>
 
       {error && (
