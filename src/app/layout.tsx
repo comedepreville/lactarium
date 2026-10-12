@@ -18,13 +18,13 @@ const body = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Lactæ",
+  title: "Lactae",
   description: "Suivi des tirages de lait — cible 800 ml / 24 h",
   applicationName: "Lactae",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Lactæ",
+    title: "Lactae",
   },
   formatDetection: {
     telephone: false,

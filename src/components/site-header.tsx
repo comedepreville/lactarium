@@ -19,7 +19,7 @@ export function SiteHeader() {
       <div className="mx-auto flex max-w-lg items-center justify-between gap-3 px-4 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <Link href="/" className="group min-w-0">
           <span className="font-display text-2xl tracking-tight text-[var(--rose-deep)] transition-colors group-hover:text-[var(--rose-dust)]">
-            Lactæ
+            Lactae
           </span>
         </Link>
 

@@ -1,4 +1,4 @@
-# Lactæ (Lactae)
+# Lactae
 
 PWA de suivi des tirages de lait — cible **800 ml / 24 h**, espacement max 6 h le jour / 5 h la nuit.
 
