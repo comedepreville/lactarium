@@ -37,6 +37,7 @@ export function SiteHeader() {
               <Link
                 key={link.href}
                 href={link.href}
+                aria-label={link.label}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition-colors",

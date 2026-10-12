@@ -4,12 +4,13 @@ import { DayList } from "@/components/day-list";
 import { DeveloperCredit } from "@/components/developer-credit";
 import { computeDashboard, lastNDays } from "@/lib/dashboard";
 import { listTirages } from "@/lib/storage";
+import { nowParis } from "@/lib/time";
 import { Plus } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 function greetingLabel() {
-  const hour = new Date().getHours();
+  const hour = nowParis().getHours();
   if (hour < 12) return "Bonjour";
   if (hour < 18) return "Bon après-midi";
   return "Bonsoir";

@@ -43,7 +43,7 @@ export function DashboardPanel({ advice }: { advice: DashboardAdvice }) {
         <CircularGauge
           value={advice.drawnMl24h}
           max={advice.targetMl || TARGET_ML_24H}
-          label="aujourd’hui"
+          label="sur 24 h"
         />
 
         <div className="mt-8 grid grid-cols-3 gap-2 sm:gap-3">
