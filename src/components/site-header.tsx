@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils";
 
 const links = [
   { href: "/", label: "Accueil", icon: Home },
-  { href: "/journal", label: "Journal", icon: BookHeart },
   { href: "/calendrier", label: "Calendrier", icon: CalendarDays },
+  { href: "/journal", label: "Journal", icon: BookHeart },
 ];
 
 export function SiteHeader() {
