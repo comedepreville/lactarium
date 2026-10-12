@@ -20,21 +20,30 @@ npm run dev
 
 Ouvre [http://localhost:3847](http://localhost:3847).
 
-## Déploiement Docker Compose
+## Déploiement Docker Compose (Traefik)
+
+Prérequis VPS : Traefik déjà en place + réseau Docker `common_network` (comme tes autres projets).
 
 ```bash
 cp .env.example .env
-# optionnel : renseigner GOOGLE_SHEETS_* dans .env
+# Renseigner LACTARIUM_HOST=ton-domaine.fr
+# optionnel : GOOGLE_SHEETS_*
 docker compose up -d --build
 ```
 
-L’app est servie sur le port `3847` (configurable via `PORT` dans `.env`).  
+Traefik route le domaine vers le conteneur (port interne `3000`).  
 Les données locales sont persistées dans le volume Docker `lactarium-data`.
 
 ### Arrêt
 
 ```bash
 docker compose down
+```
+
+## Dev local (sans Traefik)
+
+```bash
+npm run dev   # http://localhost:3847
 ```
 
 ## Google Sheets
