@@ -48,6 +48,10 @@ export type DashboardAdvice = {
   suggestedIntervalHours: number | null;
   /** true si le calcul brut dépassait 5 h (plafond appliqué) */
   intervalCappedHigh: boolean;
+  /** Première échéance depuis le dernier tirage déjà dépassée */
+  cadenceOverdue: boolean;
+  /** Plus de 5 h depuis le dernier tirage */
+  maxGapOverdue: boolean;
   maxGapHours: number;
   isNightWindow: boolean;
   status: "ok" | "behind" | "ahead" | "overdue";

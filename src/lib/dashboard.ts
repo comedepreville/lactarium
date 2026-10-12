@@ -8,6 +8,7 @@ import {
   formatParisDateShort,
   hoursUntilEndOfParisDay,
   isNightAt,
+  isPast,
   minutesBetween,
   parisDateKey,
 } from "./time";
@@ -130,14 +131,20 @@ export function computeDashboard(tirages: Tirage[]): DashboardAdvice {
   const last = sorted[0] ?? null;
   const lastTirageAt = last?.datetime ?? null;
 
-  const hoursLeftToday = hoursUntilEndOfParisDay(now);
+  /**
+   * Première échéance depuis le dernier tirage :
+   * ancrée sur lastTirageAt (pas sur « maintenant »), sinon chaque refresh
+   * invente une échéance suivante et masque le dépassement.
+   */
+  const anchor = lastTirageAt ? parseISO(lastTirageAt) : now;
+  const hoursLeftFromAnchor = hoursUntilEndOfParisDay(anchor);
   const { hours: suggestedIntervalHours, cappedHigh: intervalCappedHigh } =
-    suggestIntervalHours(hoursLeftToday, remainingTiragesEstimate);
+    suggestIntervalHours(hoursLeftFromAnchor, remainingTiragesEstimate);
 
   const nextSuggestedAt =
     suggestedIntervalHours == null
       ? null
-      : addHours(now, suggestedIntervalHours).toISOString();
+      : addHours(anchor, suggestedIntervalHours).toISOString();
 
   const isNightWindow = isNightAt(now);
   const maxGapHours = MAX_INTERVAL_HOURS;
@@ -146,7 +153,11 @@ export function computeDashboard(tirages: Tirage[]): DashboardAdvice {
     ? (now.getTime() - parseISO(lastTirageAt).getTime()) / (1000 * 60 * 60)
     : null;
   const maxGapOverdue =
-    hoursSinceLast != null && hoursSinceLast >= MAX_INTERVAL_HOURS;
+    hoursSinceLast != null &&
+    hoursSinceLast >= MAX_INTERVAL_HOURS &&
+    remainingMl > 0;
+  const cadenceOverdue =
+    nextSuggestedAt != null && isPast(nextSuggestedAt) && remainingMl > 0;
 
   let status: DashboardAdvice["status"] = "ok";
   let message = "";
@@ -154,7 +165,7 @@ export function computeDashboard(tirages: Tirage[]): DashboardAdvice {
   if (!lastTirageAt) {
     status = "behind";
     message = "Aucun tirage enregistré.";
-  } else if (maxGapOverdue && remainingMl > 0) {
+  } else if (maxGapOverdue) {
     status = "overdue";
     message = `Plus de ${MAX_INTERVAL_HOURS} h depuis le dernier tirage. Risque d’engorgement voire de mastite.`;
   } else if (intervalCappedHigh && remainingMl > 0) {
@@ -189,6 +200,8 @@ export function computeDashboard(tirages: Tirage[]): DashboardAdvice {
     nextSuggestedAt,
     suggestedIntervalHours,
     intervalCappedHigh,
+    cadenceOverdue,
+    maxGapOverdue,
     maxGapHours,
     isNightWindow,
     status,
