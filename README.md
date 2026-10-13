@@ -51,7 +51,6 @@ Supprime / remplace l’ancien A `@ → 2.57.91.91` (parking Hostinger). Les NS 
 ```bash
 cp .env.example .env
 # LACTARIUM_HOST=lactae.app (déjà dans .env.example)
-<<<<<<< HEAD
 # + variables Supabase
 docker compose up -d --build
 ```
@@ -59,16 +58,6 @@ docker compose up -d --build
 Sur le VPS, mets à jour le `.env` existant (`LACTARIUM_HOST=lactae.app` + clés Supabase) puis rebuild.
 
 Traefik route `lactae.app` et `www.lactae.app` vers le conteneur (port interne `3000`) et demande le certificat Let’s Encrypt.
-=======
-# optionnel : GOOGLE_SHEETS_*
-docker compose up -d --build
-```
-
-Sur le VPS, mets à jour le `.env` existant (`LACTARIUM_HOST=lactae.app`) puis rebuild.
-
-Traefik route `lactae.app` et `www.lactae.app` vers le conteneur (port interne `3000`) et demande le certificat Let’s Encrypt.  
-Les données locales sont persistées dans le volume Docker `lactarium-data`.
->>>>>>> origin/main
 
 ### Arrêt
 
