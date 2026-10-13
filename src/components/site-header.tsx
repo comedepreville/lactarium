@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BookHeart, CalendarDays, Home } from "lucide-react";
+import { LogoutButton } from "@/components/logout-button";
 import { cn } from "@/lib/utils";
 
 const links = [
@@ -11,7 +12,7 @@ const links = [
   { href: "/journal", label: "Journal", icon: BookHeart },
 ];
 
-export function SiteHeader() {
+export function SiteHeader({ displayName }: { displayName?: string | null }) {
   const pathname = usePathname();
 
   return (
@@ -21,37 +22,45 @@ export function SiteHeader() {
           <span className="font-display text-2xl tracking-tight text-[var(--rose-deep)] transition-colors group-hover:text-[var(--rose-dust)]">
             Lactae
           </span>
+          {displayName ? (
+            <span className="mt-0.5 block truncate text-xs text-[var(--ink-muted)]">
+              {displayName}
+            </span>
+          ) : null}
         </Link>
 
-        <nav
-          aria-label="Navigation principale"
-          className="surface-card flex items-center gap-1 rounded-full p-1"
-        >
-          {links.map((link) => {
-            const active =
-              link.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(link.href);
-            const Icon = link.icon;
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                aria-label={link.label}
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition-colors",
-                  active
-                    ? "bg-[var(--rose-dust)] text-[var(--primary-foreground)] shadow-sm"
-                    : "text-[var(--ink-muted)] hover:bg-[var(--blush)] hover:text-[var(--ink)]",
-                )}
-              >
-                <Icon className="size-3.5" aria-hidden />
-                <span className="hidden sm:inline">{link.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
+        <div className="flex items-center gap-1">
+          <nav
+            aria-label="Navigation principale"
+            className="surface-card flex items-center gap-1 rounded-full p-1"
+          >
+            {links.map((link) => {
+              const active =
+                link.href === "/"
+                  ? pathname === "/"
+                  : pathname.startsWith(link.href);
+              const Icon = link.icon;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  aria-label={link.label}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition-colors",
+                    active
+                      ? "bg-[var(--rose-dust)] text-[var(--primary-foreground)] shadow-sm"
+                      : "text-[var(--ink-muted)] hover:bg-[var(--blush)] hover:text-[var(--ink)]",
+                  )}
+                >
+                  <Icon className="size-3.5" aria-hidden />
+                  <span className="hidden sm:inline">{link.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+          <LogoutButton />
+        </div>
       </div>
     </header>
   );

@@ -3,15 +3,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:-}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
     container_name: lactarium
     restart: unless-stopped
     environment:
-      DATA_DIR: /data
-      GOOGLE_SHEETS_ID: ${GOOGLE_SHEETS_ID:-}
-      GOOGLE_SERVICE_ACCOUNT_EMAIL: ${GOOGLE_SERVICE_ACCOUNT_EMAIL:-}
-      GOOGLE_PRIVATE_KEY: ${GOOGLE_PRIVATE_KEY:-}
-    volumes:
-      - lactarium-data:/data
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:-}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
     labels:
       - traefik.enable=true
       - traefik.http.routers.lactarium.rule=Host(`${LACTARIUM_HOST}`) || Host(`www.${LACTARIUM_HOST}`)
@@ -30,9 +31,6 @@ services:
       - traefik.http.services.lactarium.loadbalancer.server.port=3000
     networks:
       - common_network
-
-volumes:
-  lactarium-data:
 
 networks:
   common_network:

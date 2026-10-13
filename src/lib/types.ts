@@ -1,3 +1,5 @@
+import type { UserType } from "./supabase/database.types";
+
 export type Tirage = {
   id: string;
   /** ISO datetime in UTC; displayed in Europe/Paris */
@@ -10,6 +12,17 @@ export type JournalEntry = {
   /** ISO datetime in UTC; displayed in Europe/Paris */
   datetime: string;
   text: string;
+};
+
+export type Profile = {
+  id: string;
+  displayName: string | null;
+  childFirstName: string | null;
+  childBirthDate: string | null;
+  userType: UserType;
+  targetMl24h: number;
+  timezone: string;
+  onboardingCompletedAt: string | null;
 };
 
 export type JournalDaySummary = {

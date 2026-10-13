@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 import { Atmosphere } from "@/components/atmosphere";
 import { PwaRegister } from "@/components/pwa-register";
-import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
 
 const display = Cormorant_Garamond({
@@ -59,10 +58,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="font-body relative flex min-h-full flex-col">
         <Atmosphere />
         <PwaRegister />
-        <SiteHeader />
-        <main className="page-shell mx-auto w-full max-w-lg flex-1 px-4 pb-20 pt-5">
-          {children}
-        </main>
+        {children}
       </body>
     </html>
   );

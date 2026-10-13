@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { getCurrentUser } from "@/lib/profile";
 import { revalidateTiragesViews } from "@/lib/revalidate";
-import { createTirage, getBackend, listTirages } from "@/lib/storage";
+import { createTirage, listTirages } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -13,11 +14,12 @@ const createSchema = z.object({
 
 export async function GET() {
   try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+    }
     const tirages = await listTirages();
-    return NextResponse.json({
-      tirages,
-      backend: getBackend(),
-    });
+    return NextResponse.json({ tirages });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
@@ -29,6 +31,10 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+    }
     const body = await request.json();
     const parsed = createSchema.safeParse(body);
     if (!parsed.success) {
@@ -39,7 +45,7 @@ export async function POST(request: Request) {
     }
     const tirage = await createTirage(parsed.data);
     revalidateTiragesViews();
-    return NextResponse.json({ tirage, backend: getBackend() }, { status: 201 });
+    return NextResponse.json({ tirage }, { status: 201 });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
