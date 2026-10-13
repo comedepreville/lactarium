@@ -25,14 +25,29 @@ Ouvre [http://localhost:3847](http://localhost:3847).
 
 Prérequis VPS : Traefik déjà en place + réseau Docker `common_network` (comme tes autres projets).
 
+### DNS (`lactae.app`)
+
+Chez Hostinger, pointe le domaine vers le VPS :
+
+| Type | Nom | Valeur | TTL |
+|------|-----|--------|-----|
+| A | `@` | `168.231.86.40` | 300 (puis remonter) |
+| CNAME | `www` | `lactae.app.` | 300 |
+
+Supprime / remplace l’ancien A `@ → 2.57.91.91` (parking Hostinger). Les NS Hostinger peuvent rester tels quels.
+
+### Docker
+
 ```bash
 cp .env.example .env
-# Renseigner LACTARIUM_HOST=ton-domaine.fr
+# LACTARIUM_HOST=lactae.app (déjà dans .env.example)
 # optionnel : GOOGLE_SHEETS_*
 docker compose up -d --build
 ```
 
-Traefik route le domaine vers le conteneur (port interne `3000`).  
+Sur le VPS, mets à jour le `.env` existant (`LACTARIUM_HOST=lactae.app`) puis rebuild.
+
+Traefik route `lactae.app` et `www.lactae.app` vers le conteneur (port interne `3000`) et demande le certificat Let’s Encrypt.  
 Les données locales sont persistées dans le volume Docker `lactarium-data`.
 
 ### Arrêt

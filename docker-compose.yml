@@ -14,7 +14,7 @@ services:
       - lactarium-data:/data
     labels:
       - traefik.enable=true
-      - traefik.http.routers.lactarium.rule=Host(`${LACTARIUM_HOST}`)
+      - traefik.http.routers.lactarium.rule=Host(`${LACTARIUM_HOST}`) || Host(`www.${LACTARIUM_HOST}`)
       - traefik.http.routers.lactarium.entrypoints=web,websecure
       - traefik.http.routers.lactarium.tls=true
       - traefik.http.routers.lactarium.tls.certresolver=mytlschallenge
