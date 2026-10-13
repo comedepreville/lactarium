@@ -13,7 +13,7 @@ export const revalidate = 0;
 
 const updateSchema = z.object({
   datetime: z.string().datetime().optional(),
-  quantityMl: z.number().int().positive().multipleOf(10).optional(),
+  quantityMl: z.number().int().min(10).max(300).multipleOf(10).optional(),
 });
 
 type Params = { params: Promise<{ id: string }> };
