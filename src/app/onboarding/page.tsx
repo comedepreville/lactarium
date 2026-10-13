@@ -1,6 +1,11 @@
 import { redirect } from "next/navigation";
 import { OnboardingForm } from "@/components/onboarding-form";
-import { getCurrentUser, getProfile, isOnboardingComplete } from "@/lib/profile";
+import {
+  getCurrentUser,
+  getProfile,
+  isOnboardingComplete,
+  roleHomePath,
+} from "@/lib/profile";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +16,11 @@ export default async function OnboardingPage() {
   }
 
   const profile = await getProfile(user.id);
+  const roleHome = roleHomePath(profile);
+  if (roleHome) {
+    redirect(roleHome);
+  }
+
   if (isOnboardingComplete(profile)) {
     redirect("/");
   }

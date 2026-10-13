@@ -1,6 +1,11 @@
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
-import { getCurrentUser, getProfile, isOnboardingComplete } from "@/lib/profile";
+import {
+  getCurrentUser,
+  getProfile,
+  isOnboardingComplete,
+  roleHomePath,
+} from "@/lib/profile";
 
 export default async function AppLayout({
   children,
@@ -13,6 +18,11 @@ export default async function AppLayout({
   }
 
   const profile = await getProfile(user.id);
+  const roleHome = roleHomePath(profile);
+  if (roleHome) {
+    redirect(roleHome);
+  }
+
   if (!isOnboardingComplete(profile)) {
     redirect("/onboarding");
   }

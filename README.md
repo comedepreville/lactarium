@@ -19,7 +19,8 @@ Prod : [https://lactae.app](https://lactae.app)
 
 ```bash
 cp .env.example .env
-# Renseigner NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+# Renseigner NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+# et SUPABASE_SERVICE_ROLE_KEY (admin / création soignants)
 npm install
 npm run dev
 ```
@@ -29,7 +30,12 @@ Ouvre [http://localhost:3847](http://localhost:3847).
 Dans Supabase → Authentication → URL configuration, ajoutez aux Redirect URLs :
 - `http://localhost:3847/auth/callback`
 - `https://lactae.app/auth/callback`
-- `https://www.lactae.app/auth/callback` (si utilisé)
+- `https://www.lactae.app/auth/callback` (si www)
+
+Pour promouvoir un compte admin :
+```sql
+update public.profiles set user_type = 'admin' where id = '<uuid>';
+```
 
 ## Déploiement Docker Compose (Traefik)
 

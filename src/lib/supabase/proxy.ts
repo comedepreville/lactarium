@@ -57,6 +57,7 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     url.search = "";
+    // Les layouts redirigent ensuite admin → /admin, soignant → /soignant.
     return NextResponse.redirect(url);
   }
 
