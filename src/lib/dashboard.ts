@@ -107,7 +107,10 @@ export function suggestIntervalHours(
   return { hours, cappedHigh };
 }
 
-export function computeDashboard(tirages: Tirage[]): DashboardAdvice {
+export function computeDashboard(
+  tirages: Tirage[],
+  targetMl: number = TARGET_ML_24H,
+): DashboardAdvice {
   const now = new Date();
   const todayKey = parisDateKey(now);
   const todayTirages = tirages.filter(
@@ -115,7 +118,7 @@ export function computeDashboard(tirages: Tirage[]): DashboardAdvice {
   );
 
   const drawnMlToday = todayTirages.reduce((s, t) => s + t.quantityMl, 0);
-  const remainingMl = Math.max(0, TARGET_ML_24H - drawnMlToday);
+  const remainingMl = Math.max(0, targetMl - drawnMlToday);
 
   const avgMlLast3 = averageLastNTirages(tirages, 3);
   const remainingTiragesEstimate = estimateRemainingTirages(
@@ -124,7 +127,7 @@ export function computeDashboard(tirages: Tirage[]): DashboardAdvice {
   );
   const recommendedTiragesPerDay = Math.max(
     1,
-    Math.ceil(TARGET_ML_24H / Math.max(avgMlLast3, 10)),
+    Math.ceil(targetMl / Math.max(avgMlLast3, 10)),
   );
 
   const sorted = sortDesc(tirages);
@@ -171,13 +174,13 @@ export function computeDashboard(tirages: Tirage[]): DashboardAdvice {
   } else if (intervalCappedHigh && remainingMl > 0) {
     status = "behind";
     message = `Intervalle plafonné à ${MAX_INTERVAL_HOURS} h : sinon risque d’engorgement voire de mastite.`;
-  } else if (drawnMlToday > TARGET_ML_24H + 100) {
+  } else if (drawnMlToday > targetMl + 100) {
     status = "ahead";
     message = `Volume élevé (${drawnMlToday} ml). Risque de surstimulation.`;
-  } else if (drawnMlToday >= TARGET_ML_24H) {
+  } else if (drawnMlToday >= targetMl) {
     status = "ok";
     message = `Cible atteinte (${drawnMlToday} ml).`;
-  } else if (drawnMlToday < TARGET_ML_24H * 0.7 && todayTirages.length > 0) {
+  } else if (drawnMlToday < targetMl * 0.7 && todayTirages.length > 0) {
     status = "behind";
     message = `${remainingMl} ml restants ≈ ${remainingTiragesEstimate} tirage${remainingTiragesEstimate > 1 ? "s" : ""}.`;
   } else {
@@ -189,7 +192,7 @@ export function computeDashboard(tirages: Tirage[]): DashboardAdvice {
   }
 
   return {
-    targetMl: TARGET_ML_24H,
+    targetMl,
     drawnMlToday,
     remainingMl,
     tirageCountToday: todayTirages.length,

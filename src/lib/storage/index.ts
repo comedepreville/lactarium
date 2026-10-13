@@ -1,75 +1,174 @@
+import { createClient } from "@/lib/supabase/server";
 import type { JournalEntry, Tirage } from "../types";
-import * as local from "./local";
-import * as sheets from "./sheets";
 
-export type StorageBackend = "sheets" | "local";
+function mapTirage(row: {
+  id: string;
+  datetime: string;
+  quantity_ml: number;
+}): Tirage {
+  return {
+    id: row.id,
+    datetime: row.datetime,
+    quantityMl: row.quantity_ml,
+  };
+}
 
-export function getBackend(): StorageBackend {
-  return sheets.sheetsConfigured() ? "sheets" : "local";
+function mapJournal(row: {
+  id: string;
+  datetime: string;
+  text: string;
+}): JournalEntry {
+  return {
+    id: row.id,
+    datetime: row.datetime,
+    text: row.text,
+  };
 }
 
 export async function listTirages(): Promise<Tirage[]> {
-  return getBackend() === "sheets" ? sheets.sheetsList() : local.localList();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("tirages")
+    .select("id, datetime, quantity_ml")
+    .order("datetime", { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []).map(mapTirage);
 }
 
 export async function getTirage(id: string): Promise<Tirage | null> {
-  return getBackend() === "sheets" ? sheets.sheetsGet(id) : local.localGet(id);
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("tirages")
+    .select("id, datetime, quantity_ml")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ? mapTirage(data) : null;
 }
 
 export async function createTirage(
   input: Omit<Tirage, "id"> & { id?: string },
 ): Promise<Tirage> {
-  return getBackend() === "sheets"
-    ? sheets.sheetsCreate(input)
-    : local.localCreate(input);
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("tirages")
+    .insert({
+      ...(input.id ? { id: input.id } : {}),
+      datetime: input.datetime,
+      quantity_ml: input.quantityMl,
+    })
+    .select("id, datetime, quantity_ml")
+    .single();
+
+  if (error) throw error;
+  return mapTirage(data);
 }
 
 export async function updateTirage(
   id: string,
   patch: Partial<Omit<Tirage, "id">>,
 ): Promise<Tirage | null> {
-  return getBackend() === "sheets"
-    ? sheets.sheetsUpdate(id, patch)
-    : local.localUpdate(id, patch);
+  const payload: { datetime?: string; quantity_ml?: number } = {};
+  if (patch.datetime !== undefined) payload.datetime = patch.datetime;
+  if (patch.quantityMl !== undefined) payload.quantity_ml = patch.quantityMl;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("tirages")
+    .update(payload)
+    .eq("id", id)
+    .select("id, datetime, quantity_ml")
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ? mapTirage(data) : null;
 }
 
 export async function deleteTirage(id: string): Promise<boolean> {
-  return getBackend() === "sheets"
-    ? sheets.sheetsDelete(id)
-    : local.localDelete(id);
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("tirages")
+    .delete()
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw error;
+  return Boolean(data);
 }
 
 export async function listJournal(): Promise<JournalEntry[]> {
-  return getBackend() === "sheets"
-    ? sheets.sheetsListJournal()
-    : local.localListJournal();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("journal_entries")
+    .select("id, datetime, text")
+    .order("datetime", { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []).map(mapJournal);
 }
 
 export async function getJournalEntry(id: string): Promise<JournalEntry | null> {
-  return getBackend() === "sheets"
-    ? sheets.sheetsGetJournal(id)
-    : local.localGetJournal(id);
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("journal_entries")
+    .select("id, datetime, text")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ? mapJournal(data) : null;
 }
 
 export async function createJournalEntry(
   input: Omit<JournalEntry, "id"> & { id?: string },
 ): Promise<JournalEntry> {
-  return getBackend() === "sheets"
-    ? sheets.sheetsCreateJournal(input)
-    : local.localCreateJournal(input);
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("journal_entries")
+    .insert({
+      ...(input.id ? { id: input.id } : {}),
+      datetime: input.datetime,
+      text: input.text,
+    })
+    .select("id, datetime, text")
+    .single();
+
+  if (error) throw error;
+  return mapJournal(data);
 }
 
 export async function updateJournalEntry(
   id: string,
   patch: Partial<Omit<JournalEntry, "id">>,
 ): Promise<JournalEntry | null> {
-  return getBackend() === "sheets"
-    ? sheets.sheetsUpdateJournal(id, patch)
-    : local.localUpdateJournal(id, patch);
+  const payload: { datetime?: string; text?: string } = {};
+  if (patch.datetime !== undefined) payload.datetime = patch.datetime;
+  if (patch.text !== undefined) payload.text = patch.text;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("journal_entries")
+    .update(payload)
+    .eq("id", id)
+    .select("id, datetime, text")
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ? mapJournal(data) : null;
 }
 
 export async function deleteJournalEntry(id: string): Promise<boolean> {
-  return getBackend() === "sheets"
-    ? sheets.sheetsDeleteJournal(id)
-    : local.localDeleteJournal(id);
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("journal_entries")
+    .delete()
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw error;
+  return Boolean(data);
 }

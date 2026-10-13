@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { getCurrentUser } from "@/lib/profile";
 import { revalidateJournalViews } from "@/lib/revalidate";
-import {
-  createJournalEntry,
-  getBackend,
-  listJournal,
-} from "@/lib/storage";
+import { createJournalEntry, listJournal } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -17,11 +14,12 @@ const createSchema = z.object({
 
 export async function GET() {
   try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+    }
     const entries = await listJournal();
-    return NextResponse.json({
-      entries,
-      backend: getBackend(),
-    });
+    return NextResponse.json({ entries });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
@@ -33,6 +31,10 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+    }
     const body = await request.json();
     const parsed = createSchema.safeParse(body);
     if (!parsed.success) {
@@ -43,7 +45,7 @@ export async function POST(request: Request) {
     }
     const entry = await createJournalEntry(parsed.data);
     revalidateJournalViews();
-    return NextResponse.json({ entry, backend: getBackend() }, { status: 201 });
+    return NextResponse.json({ entry }, { status: 201 });
   } catch (error) {
     console.error(error);
     return NextResponse.json(

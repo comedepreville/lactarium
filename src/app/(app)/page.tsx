@@ -5,8 +5,9 @@ import { DayList } from "@/components/day-list";
 import { DeveloperCredit } from "@/components/developer-credit";
 import { StatusBanner } from "@/components/status-banner";
 import { computeDashboard, lastNDays } from "@/lib/dashboard";
+import { getProfile } from "@/lib/profile";
 import { listTirages } from "@/lib/storage";
-import { nowParis } from "@/lib/time";
+import { TARGET_ML_24H, nowParis } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
 
@@ -18,11 +19,13 @@ function greetingLabel() {
 }
 
 export default async function HomePage() {
-  const tirages = await listTirages();
-  const advice = computeDashboard(tirages);
+  const [tirages, profile] = await Promise.all([listTirages(), getProfile()]);
+  const targetMl = profile?.targetMl24h ?? TARGET_ML_24H;
+  const advice = computeDashboard(tirages, targetMl);
   const recentDays = lastNDays(tirages, 3);
   const greeting = greetingLabel();
   const showTopAlert = advice.maxGapOverdue;
+  const firstName = profile?.displayName?.trim();
 
   return (
     <div className="space-y-8">
@@ -37,7 +40,7 @@ export default async function HomePage() {
 
         <div className="space-y-2">
           <p className="text-sm font-medium uppercase tracking-[0.18em] text-[var(--ink-muted)]">
-            {greeting}
+            {firstName ? `${greeting}, ${firstName}` : greeting}
           </p>
           <h1 className="font-display text-5xl leading-[0.95] tracking-tight text-[var(--rose-deep)] sm:text-6xl">
             Lactae
