@@ -47,6 +47,16 @@ export function formatParisDateShort(date: Date | string): string {
   return format(toParis(date), "EEE d MMM", { locale: fr });
 }
 
+/** Date longue pour titres d’export : « 14 octobre 2026 » */
+export function formatParisDateLong(date: Date | string): string {
+  return format(toParis(date), "d MMMM yyyy", { locale: fr });
+}
+
+/** Clé jour Paris → Date ancrée à midi (évite les bascules DST). */
+export function parisDateKeyToNoon(dateKey: string): Date {
+  return fromZonedTime(`${dateKey}T12:00:00`, TZ);
+}
+
 export function formatGap(minutes: number | null): string {
   if (minutes === null) return "—";
   const h = Math.floor(minutes / 60);

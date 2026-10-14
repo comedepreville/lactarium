@@ -37,8 +37,10 @@ export function withGaps(tirages: Tirage[]): TirageWithGap[] {
 }
 
 export function groupByDay(tirages: Tirage[]): DaySummary[] {
-  const byDay = new Map<string, Tirage[]>();
-  for (const t of tirages) {
+  /** Écarts calculés sur toute la chronologie (y compris d’un jour à l’autre). */
+  const withAllGaps = withGaps(tirages);
+  const byDay = new Map<string, TirageWithGap[]>();
+  for (const t of withAllGaps) {
     const key = parisDateKey(t.datetime);
     const list = byDay.get(key) ?? [];
     list.push(t);
@@ -48,14 +50,14 @@ export function groupByDay(tirages: Tirage[]): DaySummary[] {
   const days = [...byDay.entries()]
     .sort(([a], [b]) => (a < b ? 1 : -1))
     .map(([dateKey, list]) => {
-      const withGap = withGaps(list);
       const totalMl = list.reduce((s, t) => s + t.quantityMl, 0);
       return {
         dateKey,
         label: formatParisDate(list[0].datetime),
         totalMl,
         count: list.length,
-        tirages: [...withGap].reverse(),
+        /** Plus récent en premier à l’affichage */
+        tirages: [...list].reverse(),
       };
     });
 
