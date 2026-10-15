@@ -2,6 +2,10 @@ import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser, getProfile, isOnboardingComplete } from "@/lib/profile";
 
+/** Auth + données utilisateur : jamais de Full Route Cache partagé. */
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+
 export default async function AppLayout({
   children,
 }: {

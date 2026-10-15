@@ -4,6 +4,7 @@ import { useId, useMemo, useState, useTransition } from "react";
 import { CircularVolumeSlider } from "@/components/circular-volume-slider";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { useMutationNavigation } from "@/lib/mutation-navigation";
 import {
   nowParis,
   parisDateKey,
@@ -39,6 +40,7 @@ export function TirageForm({
   initialQuantityMl = 100,
   initialNotes = null,
 }: Props) {
+  const navigateAfterMutation = useMutationNavigation();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const volumeLabelId = useId();
@@ -90,7 +92,7 @@ export function TirageForm({
           const data = await res.json().catch(() => ({}));
           throw new Error(data.error || "Échec de l’enregistrement");
         }
-        window.location.assign("/");
+        navigateAfterMutation("/");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erreur inconnue");
       }
@@ -107,7 +109,7 @@ export function TirageForm({
           method: "DELETE",
         });
         if (!res.ok) throw new Error("Suppression impossible");
-        window.location.assign("/");
+        navigateAfterMutation("/");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erreur inconnue");
       }

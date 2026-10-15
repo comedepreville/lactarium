@@ -60,6 +60,7 @@ export default async function HomePage() {
           </h2>
           <Link
             href="/calendrier"
+            prefetch={false}
             className="text-sm font-medium text-[var(--rose-deep)] underline-offset-4 hover:underline"
           >
             Voir plus

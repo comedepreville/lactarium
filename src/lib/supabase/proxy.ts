@@ -60,5 +60,15 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Données utilisateur (SSR / RSC) : interdire tout cache HTTP intermédiaire.
+  // Le SW ne doit pas non plus les stocker (voir public/sw.js).
+  if (!isApi) {
+    supabaseResponse.headers.set(
+      "Cache-Control",
+      "private, no-cache, no-store, max-age=0, must-revalidate",
+    );
+    supabaseResponse.headers.set("Pragma", "no-cache");
+  }
+
   return supabaseResponse;
 }

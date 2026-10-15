@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { useMutationNavigation } from "@/lib/mutation-navigation";
 import {
   generateTimeOptions,
   nowParis,
@@ -29,6 +30,7 @@ export function JournalForm({
   initialDatetime,
   initialText = "",
 }: Props) {
+  const navigateAfterMutation = useMutationNavigation();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -72,7 +74,7 @@ export function JournalForm({
           const data = await res.json().catch(() => ({}));
           throw new Error(data.error || "Échec de l’enregistrement");
         }
-        window.location.assign("/journal");
+        navigateAfterMutation("/journal");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erreur inconnue");
       }
@@ -89,7 +91,7 @@ export function JournalForm({
           method: "DELETE",
         });
         if (!res.ok) throw new Error("Suppression impossible");
-        window.location.assign("/journal");
+        navigateAfterMutation("/journal");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erreur inconnue");
       }
