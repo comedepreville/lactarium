@@ -18,12 +18,3 @@ export function getSupabasePublishableKey(): string {
   }
   return key;
 }
-
-/** Clé service role — serveur uniquement, jamais exposée au client. */
-export function getSupabaseServiceRoleKey(): string {
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!key) {
-    throw new Error("SUPABASE_SERVICE_ROLE_KEY manquant");
-  }
-  return key;
-}
