@@ -48,6 +48,7 @@ export type Database = {
           user_id: string;
           datetime: string;
           quantity_ml: number;
+          duration: number | null;
           notes: string | null;
           created_at: string;
           updated_at: string;
@@ -57,6 +58,7 @@ export type Database = {
           user_id?: string;
           datetime: string;
           quantity_ml: number;
+          duration: number;
           notes?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -66,6 +68,7 @@ export type Database = {
           user_id?: string;
           datetime?: string;
           quantity_ml?: number;
+          duration?: number;
           notes?: string | null;
           created_at?: string;
           updated_at?: string;

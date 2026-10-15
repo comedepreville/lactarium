@@ -3,7 +3,7 @@ import { FloatingActionLink } from "@/components/floating-action-link";
 
 export function AddTirageFab() {
   return (
-    <FloatingActionLink href="/ajouter" label="Ajouter un tirage">
+    <FloatingActionLink href="/ajouter/minuteur" label="Ajouter un tirage">
       <Plus className="size-6" strokeWidth={2.25} aria-hidden />
     </FloatingActionLink>
   );

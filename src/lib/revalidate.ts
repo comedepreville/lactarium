@@ -12,6 +12,7 @@ export function revalidateTiragesViews() {
   revalidatePath("/");
   revalidatePath("/calendrier");
   revalidatePath("/ajouter");
+  revalidatePath("/ajouter/minuteur");
 }
 
 /** Invalide les vues du journal de vie. */
