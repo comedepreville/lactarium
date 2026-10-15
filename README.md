@@ -13,6 +13,7 @@ Prod : [https://lactae.app](https://lactae.app)
 - **Calendrier** : historique complet avec édition
 - **Journal de vie** : fil d’événements groupés par jour
 - **Backend** : Supabase (Auth + Postgres + RLS)
+- **Admin** : dashboard (`/admin`) si `profiles.user_type = 'admin'`
 - **PWA** : installable ; le service worker ne met en cache que les assets statiques (jamais HTML/RSC avec données utilisateur)
 
 ## Démarrage local
