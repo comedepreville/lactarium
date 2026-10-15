@@ -4,7 +4,6 @@ import { useMemo, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
-  generateTimeOptions,
   nowParis,
   parisDateKey,
   parisLocalToISO,
@@ -13,8 +12,6 @@ import {
 } from "@/lib/time";
 import { format } from "date-fns";
 import { Loader2, Trash2 } from "lucide-react";
-
-const TIME_OPTIONS = generateTimeOptions();
 
 type Props = {
   mode: "create" | "edit";
@@ -54,7 +51,8 @@ export function JournalForm({
       setError("Écrivez un peu de texte pour cet événement.");
       return;
     }
-    const datetime = parisLocalToISO(dateKey, time);
+    const timeHHmm = time.slice(0, 5);
+    const datetime = parisLocalToISO(dateKey, timeHHmm);
 
     startTransition(async () => {
       try {
@@ -122,19 +120,14 @@ export function JournalForm({
         <Label htmlFor="time" className="text-[var(--ink-muted)]">
           Heure
         </Label>
-        <select
+        <input
           id="time"
-          value={time}
+          type="time"
+          value={time.slice(0, 5)}
           onChange={(e) => setTime(e.target.value)}
-          className="pill-field appearance-none"
+          className="pill-field"
           required
-        >
-          {TIME_OPTIONS.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
+        />
       </div>
 
       <div className="space-y-2">
