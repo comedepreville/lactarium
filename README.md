@@ -14,15 +14,29 @@ Prod : [https://lactae.app](https://lactae.app)
 - **Journal de vie** : fil d’événements groupés par jour
 - **Backend** : Supabase (Auth + Postgres + RLS)
 - **PWA** : installable ; le service worker ne met en cache que les assets statiques (jamais HTML/RSC avec données utilisateur)
+- **Notifications push** : rappel 10 min avant l’échéance « prochain tirage », et « Tirage fini ! » à la fin du minuteur (iOS 16.4+ en web app écran d’accueil, Android Chrome)
 
 ## Démarrage local
 
 ```bash
 cp .env.example .env
 # Renseigner NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+# Pour les push : SUPABASE_SERVICE_ROLE_KEY + clés VAPID
+#   npx web-push generate-vapid-keys
 npm install
 npm run dev
 ```
+
+### Notifications push
+
+1. Appliquer la migration `supabase/migrations/20261015190000_push_notifications.sql`
+2. Générer des clés VAPID (`npx web-push generate-vapid-keys`) et les mettre dans `.env`
+3. Ajouter `SUPABASE_SERVICE_ROLE_KEY` (envoi serveur des notifs planifiées)
+4. Rebuild Docker si besoin (`NEXT_PUBLIC_VAPID_PUBLIC_KEY` est injecté au build)
+
+Le serveur poll toutes les 30 s les notifs dues. Endpoint manuel : `POST /api/cron/push` avec `Authorization: Bearer $CRON_SECRET`.
+
+Sur iPhone : installer Lactae via « Sur l’écran d’accueil », ouvrir l’icône, puis activer les notifications depuis l’accueil.
 
 Ouvre [http://localhost:3847](http://localhost:3847).
 

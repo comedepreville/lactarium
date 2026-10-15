@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/profile";
+import { rescheduleReminder10Min } from "@/lib/push/schedule";
 import { revalidateTiragesViews } from "@/lib/revalidate";
 import { createTirage, listTirages } from "@/lib/storage";
 
@@ -54,6 +55,9 @@ export async function POST(request: Request) {
     }
     const tirage = await createTirage(parsed.data);
     revalidateTiragesViews();
+    void rescheduleReminder10Min().catch((error) => {
+      console.error("rescheduleReminder10Min", error);
+    });
     return NextResponse.json({ tirage }, { status: 201 });
   } catch (error) {
     console.error(error);

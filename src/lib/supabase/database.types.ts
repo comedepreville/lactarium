@@ -102,6 +102,81 @@ export type Database = {
         };
         Relationships: [];
       };
+      push_subscriptions: {
+        Row: {
+          id: string;
+          user_id: string;
+          endpoint: string;
+          p256dh: string;
+          auth: string;
+          user_agent: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string;
+          endpoint: string;
+          p256dh: string;
+          auth: string;
+          user_agent?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          endpoint?: string;
+          p256dh?: string;
+          auth?: string;
+          user_agent?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      scheduled_notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          kind: "reminder_10min" | "timer_done";
+          dedupe_key: string;
+          fire_at: string;
+          title: string;
+          body: string;
+          url: string;
+          status: "pending" | "sent" | "cancelled";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string;
+          kind: "reminder_10min" | "timer_done";
+          dedupe_key: string;
+          fire_at: string;
+          title: string;
+          body: string;
+          url?: string;
+          status?: "pending" | "sent" | "cancelled";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          kind?: "reminder_10min" | "timer_done";
+          dedupe_key?: string;
+          fire_at?: string;
+          title?: string;
+          body?: string;
+          url?: string;
+          status?: "pending" | "sent" | "cancelled";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

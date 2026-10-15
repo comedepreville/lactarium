@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/profile";
+import { rescheduleReminder10Min } from "@/lib/push/schedule";
 import { revalidateTiragesViews } from "@/lib/revalidate";
 import { deleteTirage, getTirage, updateTirage } from "@/lib/storage";
+
+function refreshReminder() {
+  void rescheduleReminder10Min().catch((error) => {
+    console.error("rescheduleReminder10Min", error);
+  });
+}
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -54,6 +61,7 @@ export async function PATCH(request: Request, { params }: Params) {
       return NextResponse.json({ error: "Tirage introuvable" }, { status: 404 });
     }
     revalidateTiragesViews();
+    refreshReminder();
     return NextResponse.json({ tirage });
   } catch (error) {
     console.error(error);
@@ -73,6 +81,7 @@ export async function DELETE(_request: Request, { params }: Params) {
       return NextResponse.json({ error: "Tirage introuvable" }, { status: 404 });
     }
     revalidateTiragesViews();
+    refreshReminder();
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error(error);
