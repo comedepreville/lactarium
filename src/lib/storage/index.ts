@@ -1,15 +1,19 @@
 import { createClient } from "@/lib/supabase/server";
 import type { JournalEntry, Tirage } from "../types";
 
+const TIRAGE_SELECT = "id, datetime, quantity_ml, notes";
+
 function mapTirage(row: {
   id: string;
   datetime: string;
   quantity_ml: number;
+  notes: string | null;
 }): Tirage {
   return {
     id: row.id,
     datetime: row.datetime,
     quantityMl: row.quantity_ml,
+    notes: row.notes?.trim() ? row.notes.trim() : null,
   };
 }
 
@@ -25,11 +29,21 @@ function mapJournal(row: {
   };
 }
 
+/** Normalise une note : trim, vide → null, max 500 caractères. */
+export function normalizeTirageNotes(
+  value: string | null | undefined,
+): string | null {
+  if (value == null) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return trimmed.slice(0, 500);
+}
+
 export async function listTirages(): Promise<Tirage[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("tirages")
-    .select("id, datetime, quantity_ml")
+    .select(TIRAGE_SELECT)
     .order("datetime", { ascending: false });
 
   if (error) throw error;
@@ -40,7 +54,7 @@ export async function getTirage(id: string): Promise<Tirage | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("tirages")
-    .select("id, datetime, quantity_ml")
+    .select(TIRAGE_SELECT)
     .eq("id", id)
     .maybeSingle();
 
@@ -49,7 +63,10 @@ export async function getTirage(id: string): Promise<Tirage | null> {
 }
 
 export async function createTirage(
-  input: Omit<Tirage, "id"> & { id?: string },
+  input: Omit<Tirage, "id" | "notes"> & {
+    id?: string;
+    notes?: string | null;
+  },
 ): Promise<Tirage> {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -58,8 +75,9 @@ export async function createTirage(
       ...(input.id ? { id: input.id } : {}),
       datetime: input.datetime,
       quantity_ml: input.quantityMl,
+      notes: normalizeTirageNotes(input.notes),
     })
-    .select("id, datetime, quantity_ml")
+    .select(TIRAGE_SELECT)
     .single();
 
   if (error) throw error;
@@ -70,16 +88,23 @@ export async function updateTirage(
   id: string,
   patch: Partial<Omit<Tirage, "id">>,
 ): Promise<Tirage | null> {
-  const payload: { datetime?: string; quantity_ml?: number } = {};
+  const payload: {
+    datetime?: string;
+    quantity_ml?: number;
+    notes?: string | null;
+  } = {};
   if (patch.datetime !== undefined) payload.datetime = patch.datetime;
   if (patch.quantityMl !== undefined) payload.quantity_ml = patch.quantityMl;
+  if (patch.notes !== undefined) {
+    payload.notes = normalizeTirageNotes(patch.notes);
+  }
 
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("tirages")
     .update(payload)
     .eq("id", id)
-    .select("id, datetime, quantity_ml")
+    .select(TIRAGE_SELECT)
     .maybeSingle();
 
   if (error) throw error;

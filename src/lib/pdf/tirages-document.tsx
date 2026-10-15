@@ -142,14 +142,16 @@ const styles = StyleSheet.create({
   },
   tableRow: {
     flexDirection: "row",
+    alignItems: "flex-start",
     borderBottomWidth: 1,
     borderBottomColor: colors.line,
     paddingVertical: 5,
     paddingHorizontal: 12,
   },
-  colTime: { width: "28%", color: colors.ink },
-  colVol: { width: "28%", color: colors.ink },
-  colGap: { width: "44%", color: colors.inkMuted },
+  colTime: { width: "14%", color: colors.ink },
+  colVol: { width: "14%", color: colors.ink },
+  colGap: { width: "22%", color: colors.inkMuted },
+  colNotes: { width: "50%", color: colors.ink, paddingRight: 4 },
   th: {
     fontSize: 8,
     color: colors.inkMuted,
@@ -356,12 +358,14 @@ export function TiragesPdfDocument({ report }: { report: TiragesExportReport }) 
               <Text style={[styles.th, styles.colTime]}>Heure</Text>
               <Text style={[styles.th, styles.colVol]}>Volume</Text>
               <Text style={[styles.th, styles.colGap]}>Écart précédent</Text>
+              <Text style={[styles.th, styles.colNotes]}>Notes</Text>
             </View>
             {day.tirages.map((t) => (
-              <View key={t.id} style={styles.tableRow}>
+              <View key={t.id} style={styles.tableRow} wrap={false}>
                 <Text style={styles.colTime}>{formatParisTime(t.datetime)}</Text>
                 <Text style={styles.colVol}>{t.quantityMl} ml</Text>
                 <Text style={styles.colGap}>{formatGap(t.gapMinutes)}</Text>
+                <Text style={styles.colNotes}>{t.notes ?? ""}</Text>
               </View>
             ))}
           </View>

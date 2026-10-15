@@ -32,6 +32,7 @@ export default async function AjouterPage({ searchParams }: Props) {
         tirageId={existing?.id}
         initialDatetime={existing?.datetime}
         initialQuantityMl={existing?.quantityMl}
+        initialNotes={existing?.notes}
       />
 
       <DeveloperCredit />
