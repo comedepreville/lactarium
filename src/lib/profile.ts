@@ -21,6 +21,21 @@ export function isOnboardingComplete(profile: Profile | null): boolean {
   return Boolean(profile?.onboardingCompletedAt);
 }
 
+export function isAdmin(profile: Profile | null): boolean {
+  return profile?.userType === "admin";
+}
+
+export function isSoignant(profile: Profile | null): boolean {
+  return profile?.userType === "soignant";
+}
+
+/** Redirection selon le rôle applicatif (hors flux user classique). */
+export function roleHomePath(profile: Profile | null): string | null {
+  if (isAdmin(profile)) return "/admin";
+  if (isSoignant(profile)) return "/soignant";
+  return null;
+}
+
 export async function getCurrentUser() {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getUser();
