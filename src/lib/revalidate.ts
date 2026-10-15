@@ -1,6 +1,12 @@
 import { revalidatePath } from "next/cache";
 
-/** Invalide toutes les vues qui dépendent des tirages (dashboard inclus). */
+/**
+ * Invalide le cache serveur des vues dépendantes.
+ * Couplé à `router.refresh()` côté client après mutation.
+ *
+ * On invalide le layout `(app)` pour couvrir Accueil / Calendrier / Journal
+ * d’un coup (segments enfants inclus).
+ */
 export function revalidateTiragesViews() {
   revalidatePath("/", "layout");
   revalidatePath("/");

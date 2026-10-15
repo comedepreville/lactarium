@@ -18,7 +18,7 @@ export function SiteHeader({ displayName }: { displayName?: string | null }) {
   return (
     <header className="page-shell sticky top-0 z-40">
       <div className="mx-auto flex max-w-lg items-center justify-between gap-3 px-4 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
-        <Link href="/" className="group min-w-0">
+        <Link href="/" prefetch={false} className="group min-w-0">
           <span className="font-display text-2xl tracking-tight text-[var(--rose-deep)] transition-colors group-hover:text-[var(--rose-dust)]">
             Lactae
           </span>
@@ -44,6 +44,7 @@ export function SiteHeader({ displayName }: { displayName?: string | null }) {
                 <Link
                   key={link.href}
                   href={link.href}
+                  prefetch={false}
                   aria-label={link.label}
                   aria-current={active ? "page" : undefined}
                   className={cn(

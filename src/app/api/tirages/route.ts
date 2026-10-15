@@ -20,7 +20,14 @@ export async function GET() {
       return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
     }
     const tirages = await listTirages();
-    return NextResponse.json({ tirages });
+    return NextResponse.json(
+      { tirages },
+      {
+        headers: {
+          "Cache-Control": "private, no-store, max-age=0, must-revalidate",
+        },
+      },
+    );
   } catch (error) {
     console.error(error);
     return NextResponse.json(
