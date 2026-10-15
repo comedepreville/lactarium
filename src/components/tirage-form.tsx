@@ -19,6 +19,8 @@ const VOLUME_MIN = 0;
 const VOLUME_MAX = 300;
 const VOLUME_STEP = 10;
 const NOTES_MAX = 500;
+const DURATION_MIN = 1;
+const DURATION_MAX = 120;
 
 function snapVolume(n: number) {
   const snapped = Math.round(n / VOLUME_STEP) * VOLUME_STEP;
@@ -30,7 +32,10 @@ type Props = {
   tirageId?: string;
   initialDatetime?: string;
   initialQuantityMl?: number;
+  initialDuration?: number | null;
   initialNotes?: string | null;
+  /** Si true, la durée n’est pas préremplie (skip minuteur). */
+  requireManualDuration?: boolean;
 };
 
 export function TirageForm({
@@ -38,7 +43,9 @@ export function TirageForm({
   tirageId,
   initialDatetime,
   initialQuantityMl = 100,
+  initialDuration = null,
   initialNotes = null,
+  requireManualDuration = false,
 }: Props) {
   const navigateAfterMutation = useMutationNavigation();
   const [pending, startTransition] = useTransition();
@@ -48,17 +55,29 @@ export function TirageForm({
   const defaults = useMemo(() => {
     const iso = initialDatetime ?? roundToTenMinutesISO();
     const paris = toParis(iso);
+    const durationValue =
+      requireManualDuration || initialDuration == null || initialDuration <= 0
+        ? ""
+        : String(initialDuration);
     return {
       dateKey: parisDateKey(iso),
       time: format(paris, "HH:mm"),
       quantity: snapVolume(initialQuantityMl),
+      duration: durationValue,
       notes: initialNotes ?? "",
     };
-  }, [initialDatetime, initialQuantityMl, initialNotes]);
+  }, [
+    initialDatetime,
+    initialDuration,
+    initialNotes,
+    initialQuantityMl,
+    requireManualDuration,
+  ]);
 
   const [dateKey, setDateKey] = useState(defaults.dateKey);
   const [time, setTime] = useState(defaults.time);
   const [quantity, setQuantity] = useState(defaults.quantity);
+  const [duration, setDuration] = useState(defaults.duration);
   const [notes, setNotes] = useState(defaults.notes);
 
   function submit(e: React.FormEvent) {
@@ -66,6 +85,17 @@ export function TirageForm({
     setError(null);
     if (quantity < VOLUME_STEP) {
       setError("Choisissez un volume d’au moins 10 ml.");
+      return;
+    }
+    const durationNum = Number.parseInt(duration, 10);
+    if (
+      !Number.isFinite(durationNum) ||
+      durationNum < DURATION_MIN ||
+      durationNum > DURATION_MAX
+    ) {
+      setError(
+        `Indiquez une durée entre ${DURATION_MIN} et ${DURATION_MAX} minutes.`,
+      );
       return;
     }
     const timeHHmm = time.slice(0, 5);
@@ -84,6 +114,7 @@ export function TirageForm({
             body: JSON.stringify({
               datetime,
               quantityMl: quantity,
+              duration: durationNum,
               notes: trimmedNotes || null,
             }),
           },
@@ -147,6 +178,25 @@ export function TirageForm({
           type="time"
           value={time.slice(0, 5)}
           onChange={(e) => setTime(e.target.value)}
+          className="pill-field"
+          required
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="duration" className="text-[var(--ink-muted)]">
+          Durée (min)
+        </Label>
+        <input
+          id="duration"
+          type="number"
+          inputMode="numeric"
+          min={DURATION_MIN}
+          max={DURATION_MAX}
+          step={1}
+          value={duration}
+          onChange={(e) => setDuration(e.target.value)}
+          placeholder="ex. 15"
           className="pill-field"
           required
         />

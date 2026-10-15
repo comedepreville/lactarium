@@ -148,10 +148,11 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     paddingHorizontal: 12,
   },
-  colTime: { width: "14%", color: colors.ink },
-  colVol: { width: "14%", color: colors.ink },
-  colGap: { width: "22%", color: colors.inkMuted },
-  colNotes: { width: "50%", color: colors.ink, paddingRight: 4 },
+  colTime: { width: "12%", color: colors.ink },
+  colVol: { width: "12%", color: colors.ink },
+  colDuration: { width: "12%", color: colors.ink },
+  colGap: { width: "20%", color: colors.inkMuted },
+  colNotes: { width: "44%", color: colors.ink, paddingRight: 4 },
   th: {
     fontSize: 8,
     color: colors.inkMuted,
@@ -357,6 +358,7 @@ export function TiragesPdfDocument({ report }: { report: TiragesExportReport }) 
             <View style={styles.tableHeader}>
               <Text style={[styles.th, styles.colTime]}>Heure</Text>
               <Text style={[styles.th, styles.colVol]}>Volume</Text>
+              <Text style={[styles.th, styles.colDuration]}>Durée</Text>
               <Text style={[styles.th, styles.colGap]}>Écart précédent</Text>
               <Text style={[styles.th, styles.colNotes]}>Notes</Text>
             </View>
@@ -364,6 +366,9 @@ export function TiragesPdfDocument({ report }: { report: TiragesExportReport }) 
               <View key={t.id} style={styles.tableRow} wrap={false}>
                 <Text style={styles.colTime}>{formatParisTime(t.datetime)}</Text>
                 <Text style={styles.colVol}>{t.quantityMl} ml</Text>
+                <Text style={styles.colDuration}>
+                  {t.duration > 0 ? `${t.duration} min` : "—"}
+                </Text>
                 <Text style={styles.colGap}>{formatGap(t.gapMinutes)}</Text>
                 <Text style={styles.colNotes}>{t.notes ?? ""}</Text>
               </View>

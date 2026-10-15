@@ -57,6 +57,12 @@ export function DayList({
                     {formatParisTime(t.datetime)}
                     <span className="mx-1.5 text-[var(--rose-mist)]">·</span>
                     {t.quantityMl} ml
+                    {t.duration > 0 ? (
+                      <>
+                        <span className="mx-1.5 text-[var(--rose-mist)]">·</span>
+                        {t.duration} min
+                      </>
+                    ) : null}
                   </p>
                   <p className="mt-0.5 text-xs text-[var(--ink-muted)]">
                     Écart précédent : {formatGap(t.gapMinutes)}

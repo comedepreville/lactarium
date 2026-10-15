@@ -10,6 +10,7 @@ export const revalidate = 0;
 const createSchema = z.object({
   datetime: z.string().datetime(),
   quantityMl: z.number().int().min(10).max(300).multipleOf(10),
+  duration: z.number().int().min(1).max(120),
   notes: z.string().max(500).nullable().optional(),
 });
 

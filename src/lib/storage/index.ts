@@ -1,18 +1,20 @@
 import { createClient } from "@/lib/supabase/server";
 import type { JournalEntry, Tirage } from "../types";
 
-const TIRAGE_SELECT = "id, datetime, quantity_ml, notes";
+const TIRAGE_SELECT = "id, datetime, quantity_ml, duration, notes";
 
 function mapTirage(row: {
   id: string;
   datetime: string;
   quantity_ml: number;
+  duration: number | null;
   notes: string | null;
 }): Tirage {
   return {
     id: row.id,
     datetime: row.datetime,
     quantityMl: row.quantity_ml,
+    duration: row.duration ?? 0,
     notes: row.notes?.trim() ? row.notes.trim() : null,
   };
 }
@@ -75,6 +77,7 @@ export async function createTirage(
       ...(input.id ? { id: input.id } : {}),
       datetime: input.datetime,
       quantity_ml: input.quantityMl,
+      duration: input.duration,
       notes: normalizeTirageNotes(input.notes),
     })
     .select(TIRAGE_SELECT)
@@ -91,10 +94,12 @@ export async function updateTirage(
   const payload: {
     datetime?: string;
     quantity_ml?: number;
+    duration?: number;
     notes?: string | null;
   } = {};
   if (patch.datetime !== undefined) payload.datetime = patch.datetime;
   if (patch.quantityMl !== undefined) payload.quantity_ml = patch.quantityMl;
+  if (patch.duration !== undefined) payload.duration = patch.duration;
   if (patch.notes !== undefined) {
     payload.notes = normalizeTirageNotes(patch.notes);
   }
