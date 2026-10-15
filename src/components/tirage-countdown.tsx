@@ -4,6 +4,10 @@ import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CircularDurationSlider } from "@/components/circular-duration-slider";
 import { Button } from "@/components/ui/button";
+import {
+  cancelTimerDonePush,
+  scheduleTimerDonePush,
+} from "@/lib/push/client";
 import { playTimerDoneChime, vibrateTimerDone } from "@/lib/timer-chime";
 import { cn } from "@/lib/utils";
 import { Pause, Play, RotateCcw } from "lucide-react";
@@ -121,6 +125,8 @@ export function TirageCountdown() {
   useEffect(() => {
     if (phase !== "done" || redirectedRef.current) return;
     redirectedRef.current = true;
+    // App au premier plan : son/vibration locaux ; annule le push pour éviter le doublon.
+    void cancelTimerDonePush();
     playTimerDoneChime();
     vibrateTimerDone();
 
@@ -145,8 +151,10 @@ export function TirageCountdown() {
     const ms = durationMin * 60_000;
     remainingOnPauseRef.current = ms;
     setRemainingMs(ms);
-    endAtRef.current = Date.now() + ms;
+    const endAt = Date.now() + ms;
+    endAtRef.current = endAt;
     setPhase("running");
+    void scheduleTimerDonePush(new Date(endAt));
   }
 
   function pause() {
@@ -156,11 +164,14 @@ export function TirageCountdown() {
     }
     endAtRef.current = null;
     setPhase("paused");
+    void cancelTimerDonePush();
   }
 
   function resume() {
-    endAtRef.current = Date.now() + remainingOnPauseRef.current;
+    const endAt = Date.now() + remainingOnPauseRef.current;
+    endAtRef.current = endAt;
     setPhase("running");
+    void scheduleTimerDonePush(new Date(endAt));
   }
 
   function reset() {
@@ -170,6 +181,7 @@ export function TirageCountdown() {
     remainingOnPauseRef.current = ms;
     setRemainingMs(ms);
     setPhase("setup");
+    void cancelTimerDonePush();
   }
 
   function skipToForm() {

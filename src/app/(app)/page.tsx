@@ -3,6 +3,7 @@ import { AddTirageFab } from "@/components/add-tirage-fab";
 import { DashboardPanel } from "@/components/dashboard-panel";
 import { DayList } from "@/components/day-list";
 import { DeveloperCredit } from "@/components/developer-credit";
+import { PushNotificationsCard } from "@/components/push-notifications-card";
 import { StatusBanner } from "@/components/status-banner";
 import { computeDashboard, lastNDays } from "@/lib/dashboard";
 import { getProfile } from "@/lib/profile";
@@ -52,6 +53,8 @@ export default async function HomePage() {
       </section>
 
       <DashboardPanel advice={advice} hideStatusBanner={showTopAlert} />
+
+      <PushNotificationsCard />
 
       <section className="space-y-4">
         <div className="flex items-end justify-between gap-3 px-1">

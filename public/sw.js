@@ -8,7 +8,7 @@
  *
  * Ne jamais re-cacher `/`, `/journal`, etc. ni les requêtes RSC / prefetch.
  */
-const CACHE = "lactae-v4";
+const CACHE = "lactae-v5";
 
 const STATIC_ASSETS = [
   "/manifest.webmanifest",
@@ -62,6 +62,59 @@ self.addEventListener("activate", (event) => {
         Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))),
       )
       .then(() => self.clients.claim()),
+  );
+});
+
+self.addEventListener("push", (event) => {
+  let data = {
+    title: "Lactae",
+    body: "",
+    url: "/",
+    tag: "lactae",
+  };
+  try {
+    if (event.data) {
+      data = { ...data, ...event.data.json() };
+    }
+  } catch {
+    /* payload non JSON */
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(data.title || "Lactae", {
+      body: data.body || "",
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
+      data: { url: data.url || "/" },
+      tag: data.tag || "lactae",
+      renotify: true,
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const rawUrl =
+    (event.notification.data && event.notification.data.url) || "/";
+  const targetUrl = new URL(rawUrl, self.location.origin).href;
+
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(
+      (clientList) => {
+        for (const client of clientList) {
+          if (client.url.startsWith(self.location.origin) && "focus" in client) {
+            if ("navigate" in client) {
+              return client.navigate(targetUrl).then((c) => (c || client).focus());
+            }
+            return client.focus();
+          }
+        }
+        if (self.clients.openWindow) {
+          return self.clients.openWindow(targetUrl);
+        }
+        return undefined;
+      },
+    ),
   );
 });
 
