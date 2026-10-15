@@ -50,9 +50,9 @@ export function DayList({
             {day.tirages.map((t) => (
               <li
                 key={t.id}
-                className="flex items-center justify-between gap-3 rounded-[1.25rem] px-3 py-3.5"
+                className="flex items-start justify-between gap-3 rounded-[1.25rem] px-3 py-3.5"
               >
-                <div>
+                <div className="min-w-0 flex-1">
                   <p className="font-medium tabular-nums text-[var(--ink)]">
                     {formatParisTime(t.datetime)}
                     <span className="mx-1.5 text-[var(--rose-mist)]">·</span>
@@ -61,12 +61,17 @@ export function DayList({
                   <p className="mt-0.5 text-xs text-[var(--ink-muted)]">
                     Écart précédent : {formatGap(t.gapMinutes)}
                   </p>
+                  {t.notes ? (
+                    <p className="mt-1.5 whitespace-pre-wrap text-sm leading-snug text-[var(--ink)]/80">
+                      {t.notes}
+                    </p>
+                  ) : null}
                 </div>
                 {showEdit && (
                   <Link
                     href={`/ajouter?id=${t.id}`}
                     aria-label="Modifier le tirage"
-                    className="inline-flex size-10 items-center justify-center rounded-full text-[var(--ink-muted)] transition-colors hover:bg-[var(--blush)] hover:text-[var(--rose-deep)]"
+                    className="inline-flex size-10 shrink-0 items-center justify-center rounded-full text-[var(--ink-muted)] transition-colors hover:bg-[var(--blush)] hover:text-[var(--rose-deep)]"
                   >
                     <Pencil className="size-4" />
                   </Link>

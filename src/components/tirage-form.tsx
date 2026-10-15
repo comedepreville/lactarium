@@ -17,6 +17,7 @@ import { Loader2, Trash2 } from "lucide-react";
 const VOLUME_MIN = 0;
 const VOLUME_MAX = 300;
 const VOLUME_STEP = 10;
+const NOTES_MAX = 500;
 
 function snapVolume(n: number) {
   const snapped = Math.round(n / VOLUME_STEP) * VOLUME_STEP;
@@ -28,6 +29,7 @@ type Props = {
   tirageId?: string;
   initialDatetime?: string;
   initialQuantityMl?: number;
+  initialNotes?: string | null;
 };
 
 export function TirageForm({
@@ -35,6 +37,7 @@ export function TirageForm({
   tirageId,
   initialDatetime,
   initialQuantityMl = 100,
+  initialNotes = null,
 }: Props) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -47,12 +50,14 @@ export function TirageForm({
       dateKey: parisDateKey(iso),
       time: format(paris, "HH:mm"),
       quantity: snapVolume(initialQuantityMl),
+      notes: initialNotes ?? "",
     };
-  }, [initialDatetime, initialQuantityMl]);
+  }, [initialDatetime, initialQuantityMl, initialNotes]);
 
   const [dateKey, setDateKey] = useState(defaults.dateKey);
   const [time, setTime] = useState(defaults.time);
   const [quantity, setQuantity] = useState(defaults.quantity);
+  const [notes, setNotes] = useState(defaults.notes);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -63,6 +68,7 @@ export function TirageForm({
     }
     const timeHHmm = time.slice(0, 5);
     const datetime = parisLocalToISO(dateKey, timeHHmm);
+    const trimmedNotes = notes.trim();
 
     startTransition(async () => {
       try {
@@ -73,7 +79,11 @@ export function TirageForm({
           {
             method: mode === "edit" ? "PATCH" : "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ datetime, quantityMl: quantity }),
+            body: JSON.stringify({
+              datetime,
+              quantityMl: quantity,
+              notes: trimmedNotes || null,
+            }),
           },
         );
         if (!res.ok) {
@@ -151,6 +161,29 @@ export function TirageForm({
           max={VOLUME_MAX}
           step={VOLUME_STEP}
           aria-labelledby={volumeLabelId}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-baseline justify-between gap-3">
+          <Label htmlFor="notes" className="text-[var(--ink-muted)]">
+            Notes{" "}
+            <span className="font-normal text-[var(--ink-muted)]/70">
+              (optionnel)
+            </span>
+          </Label>
+          <span className="text-xs tabular-nums text-[var(--ink-muted)]">
+            {notes.length}/{NOTES_MAX}
+          </span>
+        </div>
+        <textarea
+          id="notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value.slice(0, NOTES_MAX))}
+          rows={3}
+          maxLength={NOTES_MAX}
+          placeholder="Stress, douleur, couleur ou odeur du lait…"
+          className="w-full resize-y rounded-[1.5rem] border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-[var(--ink)] outline-none transition-shadow placeholder:text-[var(--ink-muted)]/70 focus-visible:ring-2 focus-visible:ring-[var(--rose-dust)]/35"
         />
       </div>
 

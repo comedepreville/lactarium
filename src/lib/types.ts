@@ -5,6 +5,8 @@ export type Tirage = {
   /** ISO datetime in UTC; displayed in Europe/Paris */
   datetime: string;
   quantityMl: number;
+  /** Optional free-text note (max 500 chars); null when empty */
+  notes: string | null;
 };
 
 export type JournalEntry = {
