@@ -308,7 +308,7 @@ export function TiragesPdfDocument({ report }: { report: TiragesExportReport }) 
         <Text style={styles.brand}>Lactae</Text>
         <Text style={styles.range}>{report.rangeLabel}</Text>
 
-        <Text style={styles.sectionTitle}>Trois derniers jours</Text>
+        <Text style={styles.sectionTitle}>Trois derniers jours complets</Text>
         <View style={styles.statsRow}>
           <StatCard
             label="Tirages / jour"

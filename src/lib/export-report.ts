@@ -99,8 +99,13 @@ function statsForKeys(
   };
 }
 
+/**
+ * Trois derniers jours calendaires complets (fuseau Paris), hors journée en cours
+ * — sinon la journée partielle fausse les moyennes.
+ */
 function recentCalendarKeys(now = new Date()): string[] {
-  const end = startOfDay(toParis(now));
+  const today = startOfDay(toParis(now));
+  const end = addDays(today, -1);
   const start = addDays(end, -(RECENT_CALENDAR_DAYS - 1));
   return eachDayOfInterval({ start, end }).map((d) => format(d, "yyyy-MM-dd"));
 }
