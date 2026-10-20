@@ -8,7 +8,16 @@
  *
  * Ne jamais re-cacher `/`, `/journal`, etc. ni les requêtes RSC / prefetch.
  */
-const CACHE = "lactae-v5";
+const CACHE = "lactae-v6";
+
+/** Ferme toutes les notifications affichées par cette web app. */
+function clearAllNotifications() {
+  return self.registration.getNotifications().then((notifications) => {
+    for (const notification of notifications) {
+      notification.close();
+    }
+  });
+}
 
 const STATIC_ASSETS = [
   "/manifest.webmanifest",
@@ -65,12 +74,17 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "CLEAR_NOTIFICATIONS") {
+    event.waitUntil(clearAllNotifications());
+  }
+});
+
 self.addEventListener("push", (event) => {
   let data = {
     title: "Lactae",
     body: "",
     url: "/",
-    tag: "lactae",
   };
   try {
     if (event.data) {
@@ -80,13 +94,15 @@ self.addEventListener("push", (event) => {
     /* payload non JSON */
   }
 
+  // Tag unique : remplace la notif précédente au lieu d’empiler (Android).
+  // Sur iOS le tag est moins fiable → clear côté app à l’ouverture / tirage.
   event.waitUntil(
     self.registration.showNotification(data.title || "Lactae", {
       body: data.body || "",
       icon: "/icons/icon-192.png",
       badge: "/icons/icon-192.png",
       data: { url: data.url || "/" },
-      tag: data.tag || "lactae",
+      tag: "lactae",
       renotify: true,
     }),
   );

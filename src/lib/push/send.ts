@@ -116,7 +116,8 @@ export async function processDueNotifications(): Promise<ProcessDueResult> {
       title: row.title,
       body: row.body,
       url: row.url,
-      tag: row.kind,
+      // Une seule notif Lactae à la fois (évite l’empilement écran verrouillé).
+      tag: "lactae",
     };
 
     let anySent = false;
