@@ -47,7 +47,7 @@ export default async function HomePage() {
             Lactae
           </h1>
           <p className="max-w-sm text-sm leading-relaxed text-[var(--ink-muted)]">
-            Suivi doux de vos tirages — objectif {advice.targetMl} ml aujourd’hui.
+            Vous êtes la meilleure, bravo !
           </p>
         </div>
       </section>
