@@ -21,3 +21,11 @@ export function revalidateJournalViews() {
   revalidatePath("/journal");
   revalidatePath("/journal/ajouter");
 }
+
+/** Invalide les vues liées au profil (nom, objectif, etc.). */
+export function revalidateProfileViews() {
+  revalidatePath("/", "layout");
+  revalidatePath("/");
+  revalidatePath("/profil");
+  revalidatePath("/calendrier");
+}

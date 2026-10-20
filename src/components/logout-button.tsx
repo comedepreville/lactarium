@@ -6,7 +6,13 @@ import { LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
-export function LogoutButton({ className }: { className?: string }) {
+type Props = {
+  className?: string;
+  /** Si fourni, affiche un bouton texte plutôt que l’icône seule. */
+  label?: string;
+};
+
+export function LogoutButton({ className, label }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
@@ -24,13 +30,16 @@ export function LogoutButton({ className }: { className?: string }) {
       type="button"
       onClick={logout}
       disabled={pending}
-      aria-label="Se déconnecter"
+      aria-label={label ?? "Se déconnecter"}
       className={cn(
-        "inline-flex size-9 items-center justify-center rounded-full text-[var(--ink-muted)] transition-colors hover:bg-[var(--blush)] hover:text-[var(--ink)] disabled:opacity-60",
+        label
+          ? "inline-flex items-center justify-center gap-2 text-sm font-medium transition-colors disabled:opacity-60"
+          : "inline-flex size-9 items-center justify-center rounded-full text-[var(--ink-muted)] transition-colors hover:bg-[var(--blush)] hover:text-[var(--ink)] disabled:opacity-60",
         className,
       )}
     >
-      <LogOut className="size-4" />
+      <LogOut className="size-4" aria-hidden />
+      {label ? <span>{pending ? "Déconnexion…" : label}</span> : null}
     </button>
   );
 }
