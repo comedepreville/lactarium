@@ -5,6 +5,7 @@ import { CircularVolumeSlider } from "@/components/circular-volume-slider";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useMutationNavigation } from "@/lib/mutation-navigation";
+import { clearDisplayedPushNotifications } from "@/lib/push/client";
 import {
   nowParis,
   parisDateKey,
@@ -122,6 +123,9 @@ export function TirageForm({
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
           throw new Error(data.error || "Échec de l’enregistrement");
+        }
+        if (mode === "create") {
+          await clearDisplayedPushNotifications();
         }
         navigateAfterMutation("/");
       } catch (err) {
