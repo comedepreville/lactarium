@@ -54,7 +54,7 @@ export default async function HomePage() {
 
       <DashboardPanel advice={advice} hideStatusBanner={showTopAlert} />
 
-      <PushNotificationsCard />
+      <PushNotificationsCard onlyWhenInactive />
 
       <section className="space-y-4">
         <div className="flex items-end justify-between gap-3 px-1">

@@ -23,7 +23,15 @@ type UiState =
   | "ready"
   | "error";
 
-export function PushNotificationsCard() {
+type Props = {
+  /**
+   * Accueil : n’afficher le bloc que si les notifications ne sont pas encore
+   * activées (évite le doublon avec la page Profil).
+   */
+  onlyWhenInactive?: boolean;
+};
+
+export function PushNotificationsCard({ onlyWhenInactive = false }: Props) {
   const [ui, setUi] = useState<UiState>("loading");
   const [subscribed, setSubscribed] = useState(false);
   const [vapidKey, setVapidKey] = useState<string | null>(null);
@@ -108,6 +116,7 @@ export function PushNotificationsCard() {
   }
 
   if (ui === "loading") {
+    if (onlyWhenInactive) return null;
     return (
       <section className="surface-card animate-rise rounded-[1.75rem] px-5 py-4">
         <p className="flex items-center gap-2 text-sm text-[var(--ink-muted)]">
@@ -119,6 +128,10 @@ export function PushNotificationsCard() {
   }
 
   if (ui === "unsupported") {
+    return null;
+  }
+
+  if (onlyWhenInactive && subscribed) {
     return null;
   }
 

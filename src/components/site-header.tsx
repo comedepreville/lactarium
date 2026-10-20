@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookHeart, CalendarDays, Home } from "lucide-react";
-import { LogoutButton } from "@/components/logout-button";
+import { BookHeart, CalendarDays, Home, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const links = [
@@ -14,6 +13,7 @@ const links = [
 
 export function SiteHeader({ displayName }: { displayName?: string | null }) {
   const pathname = usePathname();
+  const profileActive = pathname.startsWith("/profil");
 
   return (
     <header className="page-shell sticky top-0 z-40">
@@ -60,7 +60,20 @@ export function SiteHeader({ displayName }: { displayName?: string | null }) {
               );
             })}
           </nav>
-          <LogoutButton />
+          <Link
+            href="/profil"
+            prefetch={false}
+            aria-label="Profil"
+            aria-current={profileActive ? "page" : undefined}
+            className={cn(
+              "inline-flex size-9 items-center justify-center rounded-full transition-colors",
+              profileActive
+                ? "bg-[var(--rose-dust)] text-[var(--primary-foreground)] shadow-sm"
+                : "text-[var(--ink-muted)] hover:bg-[var(--blush)] hover:text-[var(--ink)]",
+            )}
+          >
+            <UserRound className="size-4" aria-hidden />
+          </Link>
         </div>
       </div>
     </header>
