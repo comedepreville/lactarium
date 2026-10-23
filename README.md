@@ -17,6 +17,7 @@ Prod : [https://lactae.app](https://lactae.app)
 - **PWA** : installable ; le service worker ne met en cache que les assets statiques (jamais HTML/RSC avec données utilisateur)
 - **Notifications push** : rappel 10 min avant l’échéance « prochain tirage », et « Tirage fini ! » à la fin du minuteur (iOS 16.4+ en web app écran d’accueil, Android Chrome)
 - **Infos légales** : page unique `/infos-legales` (mentions, données, conservation)
+- **Consentement** : cases obligatoires à l’inscription (infos légales + données de suivi), preuve stockée sur le profil
 - **Rétention** : tirages / journal effacés après 2 ans ; comptes inactifs 2 ans supprimés automatiquement
 
 ## Démarrage local
@@ -38,6 +39,10 @@ npm run dev
 4. Rebuild Docker si besoin (`NEXT_PUBLIC_VAPID_PUBLIC_KEY` est injecté au build)
 
 Le serveur poll toutes les 30 s les notifs dues. Endpoint manuel : `POST /api/cron/push` avec `Authorization: Bearer $CRON_SECRET`.
+
+### Consentement (inscription)
+
+Appliquer la migration `supabase/migrations/20261023190000_profiles_consent.sql` (colonnes + trigger `handle_new_user`).
 
 ### Rétention des données (2 ans)
 

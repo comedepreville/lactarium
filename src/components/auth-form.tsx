@@ -6,7 +6,10 @@ import { useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { INFOS_LEGALES_PATH } from "@/lib/legal";
+import {
+  INFOS_LEGALES_PATH,
+  LEGAL_DOC_VERSION,
+} from "@/lib/legal";
 import { createClient } from "@/lib/supabase/client";
 
 type Mode = "login" | "signup";
@@ -16,6 +19,8 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const [pending, startTransition] = useTransition();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [consentInfos, setConsentInfos] = useState(false);
+  const [consentHealth, setConsentHealth] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
 
@@ -23,6 +28,13 @@ export function AuthForm({ mode }: { mode: Mode }) {
     e.preventDefault();
     setError(null);
     setInfo(null);
+
+    if (mode === "signup" && (!consentInfos || !consentHealth)) {
+      setError(
+        "Merci de cocher les deux cases pour créer votre compte.",
+      );
+      return;
+    }
 
     startTransition(async () => {
       const supabase = createClient();
@@ -40,8 +52,32 @@ export function AuthForm({ mode }: { mode: Mode }) {
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            data: {
+              consent_infos_legales: true,
+              consent_health: true,
+              consent_legal_version: LEGAL_DOC_VERSION,
+            },
+          },
         });
         if (signUpError) throw signUpError;
+
+        // Si la session est immédiate, s’assurer que le profil a bien la preuve
+        // (le trigger Auth la pose aussi via raw_user_meta_data).
+        if (data.session && data.user) {
+          const consentedAt = new Date().toISOString();
+          const { error: consentError } = await supabase
+            .from("profiles")
+            .update({
+              consent_infos_legales_at: consentedAt,
+              consent_health_at: consentedAt,
+              consent_legal_version: LEGAL_DOC_VERSION,
+            })
+            .eq("id", data.user.id);
+          if (consentError) {
+            console.error("consent profile update", consentError);
+          }
+        }
 
         if (!data.session) {
           setInfo(
@@ -96,6 +132,48 @@ export function AuthForm({ mode }: { mode: Mode }) {
         />
       </div>
 
+      {mode === "signup" ? (
+        <fieldset className="space-y-3 rounded-2xl border border-[var(--line)] bg-[var(--blush)]/40 px-4 py-4">
+          <legend className="px-1 text-sm font-medium text-[var(--ink)]">
+            Avant de continuer
+          </legend>
+          <label className="flex cursor-pointer gap-3 text-sm leading-relaxed text-[var(--ink)]">
+            <input
+              type="checkbox"
+              checked={consentInfos}
+              onChange={(e) => setConsentInfos(e.target.checked)}
+              className="mt-0.5 size-5 shrink-0 rounded border-2 border-[var(--rose-dust)] accent-[var(--rose-dust)]"
+              required
+            />
+            <span>
+              J’ai lu et j’accepte les{" "}
+              <Link
+                href={INFOS_LEGALES_PATH}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-[var(--rose-deep)] underline-offset-4 hover:underline"
+              >
+                Infos légales
+              </Link>
+              .
+            </span>
+          </label>
+          <label className="flex cursor-pointer gap-3 text-sm leading-relaxed text-[var(--ink)]">
+            <input
+              type="checkbox"
+              checked={consentHealth}
+              onChange={(e) => setConsentHealth(e.target.checked)}
+              className="mt-0.5 size-5 shrink-0 rounded border-2 border-[var(--rose-dust)] accent-[var(--rose-dust)]"
+              required
+            />
+            <span>
+              J’accepte que Lactae traite mes données de suivi (tirages,
+              horaires, notes, journal) pour faire fonctionner l’application.
+            </span>
+          </label>
+        </fieldset>
+      ) : null}
+
       {error && (
         <p className="rounded-full bg-[#f3ddd8] px-4 py-3 text-sm text-[#7a3f3d]">
           {error}
@@ -147,20 +225,6 @@ export function AuthForm({ mode }: { mode: Mode }) {
           </>
         )}
       </p>
-
-      {mode === "signup" ? (
-        <p className="text-center text-xs leading-relaxed text-[var(--ink-muted)]">
-          En créant un compte, vous acceptez le traitement de vos données
-          décrit dans les{" "}
-          <Link
-            href={INFOS_LEGALES_PATH}
-            className="font-medium text-[var(--rose-deep)] underline-offset-4 hover:underline"
-          >
-            Infos légales
-          </Link>
-          .
-        </p>
-      ) : null}
     </form>
   );
 }
