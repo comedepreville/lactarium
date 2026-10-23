@@ -7,6 +7,7 @@ import { ProfileForm } from "@/components/profile-form";
 import { PushNotificationsCard } from "@/components/push-notifications-card";
 import { INFOS_LEGALES_PATH, RETENTION_YEARS } from "@/lib/legal";
 import { getCurrentUser, getProfile } from "@/lib/profile";
+import { formatParisDateLong } from "@/lib/time";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +16,9 @@ export default async function ProfilPage() {
   const [user, profile] = await Promise.all([getCurrentUser(), getProfile()]);
   if (!user) redirect("/connexion");
   if (!profile) redirect("/onboarding");
+
+  const consentAt =
+    profile.consentInfosLegalesAt ?? profile.consentHealthAt ?? null;
 
   return (
     <div className="space-y-6">
@@ -36,6 +40,15 @@ export default async function ProfilPage() {
       <ExportDataButton />
 
       <section className="animate-rise space-y-2 px-1">
+        {consentAt ? (
+          <p className="text-sm leading-relaxed text-[var(--ink-muted)]">
+            Consentement enregistré le {formatParisDateLong(consentAt)}
+            {profile.consentLegalVersion
+              ? ` (infos légales v. ${profile.consentLegalVersion})`
+              : ""}
+            .
+          </p>
+        ) : null}
         <p className="text-sm leading-relaxed text-[var(--ink-muted)]">
           Vos tirages et votre journal sont conservés {RETENTION_YEARS} ans
           maximum. Détails :{" "}
