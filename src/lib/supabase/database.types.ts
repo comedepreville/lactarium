@@ -12,6 +12,9 @@ export type Database = {
           target_ml_24h: number;
           timezone: string;
           onboarding_completed_at: string | null;
+          consent_infos_legales_at: string | null;
+          consent_health_at: string | null;
+          consent_legal_version: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -23,6 +26,9 @@ export type Database = {
           target_ml_24h?: number;
           timezone?: string;
           onboarding_completed_at?: string | null;
+          consent_infos_legales_at?: string | null;
+          consent_health_at?: string | null;
+          consent_legal_version?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -34,6 +40,9 @@ export type Database = {
           target_ml_24h?: number;
           timezone?: string;
           onboarding_completed_at?: string | null;
+          consent_infos_legales_at?: string | null;
+          consent_health_at?: string | null;
+          consent_legal_version?: string | null;
           created_at?: string;
           updated_at?: string;
         };

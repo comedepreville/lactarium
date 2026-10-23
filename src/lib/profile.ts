@@ -13,6 +13,9 @@ export function mapProfile(row: ProfileRow): Profile {
     targetMl24h: row.target_ml_24h,
     timezone: row.timezone,
     onboardingCompletedAt: row.onboarding_completed_at,
+    consentInfosLegalesAt: row.consent_infos_legales_at,
+    consentHealthAt: row.consent_health_at,
+    consentLegalVersion: row.consent_legal_version,
   };
 }
 

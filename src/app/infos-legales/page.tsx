@@ -5,6 +5,7 @@ import {
   INFOS_LEGALES_PATH,
   LEGAL_CONTACT_EMAIL,
   LEGAL_CONTACT_MAILTO,
+  LEGAL_DOC_VERSION,
   RETENTION_YEARS,
 } from "@/lib/legal";
 
@@ -153,7 +154,7 @@ export default function InfosLegalesPage() {
         </section>
 
         <p className="text-xs leading-relaxed text-[var(--ink-muted)]">
-          Page {INFOS_LEGALES_PATH} — mise à jour : 23 octobre 2026.
+          Page {INFOS_LEGALES_PATH} — version {LEGAL_DOC_VERSION}.
         </p>
 
         <p className="text-sm text-[var(--ink-muted)]">

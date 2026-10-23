@@ -26,6 +26,9 @@ export type Profile = {
   targetMl24h: number;
   timezone: string;
   onboardingCompletedAt: string | null;
+  consentInfosLegalesAt: string | null;
+  consentHealthAt: string | null;
+  consentLegalVersion: string | null;
 };
 
 export type JournalDaySummary = {
