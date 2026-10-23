@@ -7,8 +7,7 @@ export type Database = {
         Row: {
           id: string;
           display_name: string | null;
-          child_first_name: string | null;
-          child_birth_date: string | null;
+          pumping_start_date: string | null;
           user_type: UserType;
           target_ml_24h: number;
           timezone: string;
@@ -19,8 +18,7 @@ export type Database = {
         Insert: {
           id: string;
           display_name?: string | null;
-          child_first_name?: string | null;
-          child_birth_date?: string | null;
+          pumping_start_date?: string | null;
           user_type?: UserType;
           target_ml_24h?: number;
           timezone?: string;
@@ -31,8 +29,7 @@ export type Database = {
         Update: {
           id?: string;
           display_name?: string | null;
-          child_first_name?: string | null;
-          child_birth_date?: string | null;
+          pumping_start_date?: string | null;
           user_type?: UserType;
           target_ml_24h?: number;
           timezone?: string;

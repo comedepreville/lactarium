@@ -11,7 +11,7 @@ export const revalidate = 0;
 
 const updateSchema = z.object({
   displayName: z.string().trim().min(1).max(80),
-  childBirthDate: z
+  pumpingStartDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide"),
   targetMl24h: z
@@ -38,9 +38,12 @@ export async function PATCH(request: Request) {
     }
 
     const todayKey = parisDateKey(nowParis());
-    if (parsed.data.childBirthDate > todayKey) {
+    if (parsed.data.pumpingStartDate > todayKey) {
       return NextResponse.json(
-        { error: "La date de naissance ne peut pas être dans le futur" },
+        {
+          error:
+            "La date de début de tirage de lait ne peut pas être dans le futur",
+        },
         { status: 400 },
       );
     }
@@ -53,7 +56,7 @@ export async function PATCH(request: Request) {
       .from("profiles")
       .update({
         display_name: parsed.data.displayName,
-        child_birth_date: parsed.data.childBirthDate,
+        pumping_start_date: parsed.data.pumpingStartDate,
         target_ml_24h: parsed.data.targetMl24h,
       })
       .eq("id", user.id)

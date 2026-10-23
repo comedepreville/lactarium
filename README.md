@@ -7,8 +7,8 @@ Prod : [https://lactae.app](https://lactae.app)
 ## Fonctionnalités
 
 - **Comptes** : authentification e-mail / mot de passe via Supabase
-- **Onboarding** : prénom parent, prénom et date de naissance de l’enfant
-- **Profil** : nom, date de naissance, objectif ml/24 h, mot de passe, notifications, export CSV, suppression de compte
+- **Onboarding** : prénom parent, date de début de tirage de lait
+- **Profil** : nom, date de début de tirage, objectif ml/24 h, mot de passe, notifications, export CSV, suppression de compte
 - **Accueil** : dashboard du jour (volume 24 h, tirages restants, délai avant prochain tirage) + 3 derniers jours
 - **Ajouter / modifier** un tirage (heure Paris par pas de 10 min, quantité par pas de 10 ml)
 - **Calendrier** : historique complet avec édition

@@ -8,8 +8,7 @@ export function mapProfile(row: ProfileRow): Profile {
   return {
     id: row.id,
     displayName: row.display_name,
-    childFirstName: row.child_first_name,
-    childBirthDate: row.child_birth_date,
+    pumpingStartDate: row.pumping_start_date,
     userType: row.user_type,
     targetMl24h: row.target_ml_24h,
     timezone: row.timezone,

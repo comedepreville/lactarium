@@ -21,8 +21,8 @@ export function ProfileForm({ profile }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [displayName, setDisplayName] = useState(profile.displayName ?? "");
-  const [childBirthDate, setChildBirthDate] = useState(
-    profile.childBirthDate ?? "",
+  const [pumpingStartDate, setPumpingStartDate] = useState(
+    profile.pumpingStartDate ?? "",
   );
   const [targetMl24h, setTargetMl24h] = useState(() => {
     const raw = profile.targetMl24h;
@@ -41,7 +41,7 @@ export function ProfileForm({ profile }: Props) {
     setSuccess(null);
 
     const name = displayName.trim();
-    if (!name || !childBirthDate) {
+    if (!name || !pumpingStartDate) {
       setError("Merci de renseigner tous les champs.");
       return;
     }
@@ -53,7 +53,7 @@ export function ProfileForm({ profile }: Props) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             displayName: name,
-            childBirthDate,
+            pumpingStartDate,
             targetMl24h,
           }),
         });
@@ -79,7 +79,7 @@ export function ProfileForm({ profile }: Props) {
       <div className="space-y-1">
         <h2 className="font-display text-2xl text-[var(--ink)]">Vos infos</h2>
         <p className="text-sm text-[var(--ink-muted)]">
-          Prénom, date de naissance de l’enfant et objectif quotidien.
+          Prénom, date de début de tirage et objectif quotidien.
         </p>
       </div>
 
@@ -99,15 +99,15 @@ export function ProfileForm({ profile }: Props) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="childBirthDate" className="text-[var(--ink-muted)]">
-          Date de naissance de l’enfant
+        <Label htmlFor="pumpingStartDate" className="text-[var(--ink-muted)]">
+          Date de début de tirage de lait
         </Label>
         <input
-          id="childBirthDate"
+          id="pumpingStartDate"
           type="date"
-          value={childBirthDate}
+          value={pumpingStartDate}
           max={todayKey}
-          onChange={(e) => setChildBirthDate(e.target.value)}
+          onChange={(e) => setPumpingStartDate(e.target.value)}
           className="pill-field"
           required
         />
