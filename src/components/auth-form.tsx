@@ -133,14 +133,16 @@ export function AuthForm({ mode }: { mode: Mode }) {
       </div>
 
       {mode === "signup" ? (
-        <fieldset className="space-y-3">
-          <legend className="sr-only">Consentements</legend>
+        <fieldset className="space-y-3 rounded-2xl border border-[var(--line)] bg-[var(--blush)]/40 px-4 py-4">
+          <legend className="px-1 text-sm font-medium text-[var(--ink)]">
+            Avant de continuer
+          </legend>
           <label className="flex cursor-pointer gap-3 text-sm leading-relaxed text-[var(--ink)]">
             <input
               type="checkbox"
               checked={consentInfos}
               onChange={(e) => setConsentInfos(e.target.checked)}
-              className="mt-1 size-4 shrink-0 rounded border-[var(--line)] accent-[var(--rose-dust)]"
+              className="mt-0.5 size-5 shrink-0 rounded border-2 border-[var(--rose-dust)] accent-[var(--rose-dust)]"
               required
             />
             <span>
@@ -161,7 +163,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
               type="checkbox"
               checked={consentHealth}
               onChange={(e) => setConsentHealth(e.target.checked)}
-              className="mt-1 size-4 shrink-0 rounded border-[var(--line)] accent-[var(--rose-dust)]"
+              className="mt-0.5 size-5 shrink-0 rounded border-2 border-[var(--rose-dust)] accent-[var(--rose-dust)]"
               required
             />
             <span>
