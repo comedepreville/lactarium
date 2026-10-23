@@ -1,4 +1,5 @@
 import { AuthForm } from "@/components/auth-form";
+import { DeveloperCredit } from "@/components/developer-credit";
 
 export default function ConnexionPage() {
   return (
@@ -17,6 +18,7 @@ export default function ConnexionPage() {
         </header>
         <AuthForm mode="login" />
       </div>
+      <DeveloperCredit />
     </main>
   );
 }

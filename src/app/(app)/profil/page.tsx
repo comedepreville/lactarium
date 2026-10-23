@@ -1,9 +1,11 @@
+import Link from "next/link";
 import { DeleteAccountSection } from "@/components/delete-account-section";
 import { ExportDataButton } from "@/components/export-data-button";
 import { LogoutButton } from "@/components/logout-button";
 import { PasswordForm } from "@/components/password-form";
 import { ProfileForm } from "@/components/profile-form";
 import { PushNotificationsCard } from "@/components/push-notifications-card";
+import { INFOS_LEGALES_PATH, RETENTION_YEARS } from "@/lib/legal";
 import { getCurrentUser, getProfile } from "@/lib/profile";
 import { redirect } from "next/navigation";
 
@@ -32,6 +34,20 @@ export default async function ProfilPage() {
       <PasswordForm />
       <PushNotificationsCard />
       <ExportDataButton />
+
+      <section className="animate-rise space-y-2 px-1">
+        <p className="text-sm leading-relaxed text-[var(--ink-muted)]">
+          Vos tirages et votre journal sont conservés {RETENTION_YEARS} ans
+          maximum. Détails :{" "}
+          <Link
+            href={INFOS_LEGALES_PATH}
+            className="font-medium text-[var(--rose-deep)] underline-offset-4 hover:underline"
+          >
+            Infos légales
+          </Link>
+          .
+        </p>
+      </section>
 
       <section className="surface-card animate-rise space-y-3 rounded-[2rem] px-5 py-6 sm:px-6">
         <div className="space-y-1">

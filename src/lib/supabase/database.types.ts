@@ -176,7 +176,17 @@ export type Database = {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      purge_data_older_than_retention: {
+        Args: { retention_years?: number };
+        Returns: {
+          cutoff: string;
+          retention_years: number;
+          tirages_deleted: number;
+          journal_deleted: number;
+        };
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };
