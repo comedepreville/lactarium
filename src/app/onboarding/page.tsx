@@ -31,8 +31,7 @@ export default async function OnboardingPage() {
         </header>
         <OnboardingForm
           initialDisplayName={profile?.displayName}
-          initialChildFirstName={profile?.childFirstName}
-          initialChildBirthDate={profile?.childBirthDate}
+          initialPumpingStartDate={profile?.pumpingStartDate}
         />
       </div>
     </main>

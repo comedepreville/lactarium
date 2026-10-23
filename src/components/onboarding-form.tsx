@@ -10,23 +10,18 @@ import { nowParis, parisDateKey } from "@/lib/time";
 
 type Props = {
   initialDisplayName?: string | null;
-  initialChildFirstName?: string | null;
-  initialChildBirthDate?: string | null;
+  initialPumpingStartDate?: string | null;
 };
 
 export function OnboardingForm({
   initialDisplayName = "",
-  initialChildFirstName = "",
-  initialChildBirthDate = "",
+  initialPumpingStartDate = "",
 }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [displayName, setDisplayName] = useState(initialDisplayName ?? "");
-  const [childFirstName, setChildFirstName] = useState(
-    initialChildFirstName ?? "",
-  );
-  const [childBirthDate, setChildBirthDate] = useState(
-    initialChildBirthDate ?? "",
+  const [pumpingStartDate, setPumpingStartDate] = useState(
+    initialPumpingStartDate ?? "",
   );
   const [error, setError] = useState<string | null>(null);
 
@@ -37,8 +32,7 @@ export function OnboardingForm({
     setError(null);
 
     const parent = displayName.trim();
-    const child = childFirstName.trim();
-    if (!parent || !child || !childBirthDate) {
+    if (!parent || !pumpingStartDate) {
       setError("Merci de renseigner tous les champs.");
       return;
     }
@@ -56,8 +50,7 @@ export function OnboardingForm({
           .from("profiles")
           .update({
             display_name: parent,
-            child_first_name: child,
-            child_birth_date: childBirthDate,
+            pumping_start_date: pumpingStartDate,
             onboarding_completed_at: new Date().toISOString(),
           })
           .eq("id", user.id);
@@ -93,30 +86,15 @@ export function OnboardingForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="childFirstName" className="text-[var(--ink-muted)]">
-          Prénom de l’enfant
+        <Label htmlFor="pumpingStartDate" className="text-[var(--ink-muted)]">
+          Date de début de tirage de lait
         </Label>
         <input
-          id="childFirstName"
-          type="text"
-          value={childFirstName}
-          onChange={(e) => setChildFirstName(e.target.value)}
-          maxLength={80}
-          className="pill-field"
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="childBirthDate" className="text-[var(--ink-muted)]">
-          Date de naissance de l’enfant
-        </Label>
-        <input
-          id="childBirthDate"
+          id="pumpingStartDate"
           type="date"
-          value={childBirthDate}
+          value={pumpingStartDate}
           max={todayKey}
-          onChange={(e) => setChildBirthDate(e.target.value)}
+          onChange={(e) => setPumpingStartDate(e.target.value)}
           className="pill-field"
           required
         />

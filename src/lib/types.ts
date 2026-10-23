@@ -21,8 +21,7 @@ export type JournalEntry = {
 export type Profile = {
   id: string;
   displayName: string | null;
-  childFirstName: string | null;
-  childBirthDate: string | null;
+  pumpingStartDate: string | null;
   userType: UserType;
   targetMl24h: number;
   timezone: string;
