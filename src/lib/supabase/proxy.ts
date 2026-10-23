@@ -2,7 +2,12 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabasePublishableKey, getSupabaseUrl } from "./env";
 
-const PUBLIC_PATHS = ["/connexion", "/inscription", "/auth/callback"];
+const PUBLIC_PATHS = [
+  "/connexion",
+  "/inscription",
+  "/auth/callback",
+  "/infos-legales",
+];
 
 function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some(

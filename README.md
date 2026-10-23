@@ -16,6 +16,8 @@ Prod : [https://lactae.app](https://lactae.app)
 - **Backend** : Supabase (Auth + Postgres + RLS)
 - **PWA** : installable ; le service worker ne met en cache que les assets statiques (jamais HTML/RSC avec données utilisateur)
 - **Notifications push** : rappel 10 min avant l’échéance « prochain tirage », et « Tirage fini ! » à la fin du minuteur (iOS 16.4+ en web app écran d’accueil, Android Chrome)
+- **Infos légales** : page unique `/infos-legales` (mentions, données, conservation)
+- **Rétention** : tirages / journal effacés après 2 ans ; comptes inactifs 2 ans supprimés automatiquement
 
 ## Démarrage local
 
@@ -36,6 +38,12 @@ npm run dev
 4. Rebuild Docker si besoin (`NEXT_PUBLIC_VAPID_PUBLIC_KEY` est injecté au build)
 
 Le serveur poll toutes les 30 s les notifs dues. Endpoint manuel : `POST /api/cron/push` avec `Authorization: Bearer $CRON_SECRET`.
+
+### Rétention des données (2 ans)
+
+1. Appliquer la migration `supabase/migrations/20261023180000_data_retention_2y.sql` (fonction RPC `purge_data_older_than_retention`)
+2. Le serveur exécute une purge une fois par jour au démarrage / toutes les 24 h (nécessite `SUPABASE_SERVICE_ROLE_KEY`)
+3. Endpoint manuel : `POST /api/cron/retention` avec `Authorization: Bearer $CRON_SECRET`
 
 Sur iPhone : installer Lactae via « Sur l’écran d’accueil », ouvrir l’icône, puis activer les notifications depuis l’accueil.
 

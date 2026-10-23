@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { INFOS_LEGALES_PATH } from "@/lib/legal";
 import { createClient } from "@/lib/supabase/client";
 
 type Mode = "login" | "signup";
@@ -146,6 +147,20 @@ export function AuthForm({ mode }: { mode: Mode }) {
           </>
         )}
       </p>
+
+      {mode === "signup" ? (
+        <p className="text-center text-xs leading-relaxed text-[var(--ink-muted)]">
+          En créant un compte, vous acceptez le traitement de vos données
+          décrit dans les{" "}
+          <Link
+            href={INFOS_LEGALES_PATH}
+            className="font-medium text-[var(--rose-deep)] underline-offset-4 hover:underline"
+          >
+            Infos légales
+          </Link>
+          .
+        </p>
+      ) : null}
     </form>
   );
 }
