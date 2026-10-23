@@ -1,13 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, DM_Sans } from "next/font/google";
+import { DM_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import { Atmosphere } from "@/components/atmosphere";
 import { PwaRegister } from "@/components/pwa-register";
 import "./globals.css";
 
-const display = Cormorant_Garamond({
+const display = localFont({
+  src: "./fonts/Salks.otf",
   variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  display: "swap",
 });
 
 const body = DM_Sans({
