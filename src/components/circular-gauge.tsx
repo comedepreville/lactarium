@@ -66,14 +66,14 @@ export function CircularGauge({
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
-        <p className="font-body text-[2.75rem] font-medium leading-none tracking-tight text-[var(--ink)] tabular-nums">
+        <p className="font-display text-[2.75rem] font-medium leading-none tracking-tight text-[var(--ink)] tabular-nums">
           {value}
         </p>
         <p className="mt-1 font-body text-sm text-[var(--ink-muted)]">
           / {max} {unit}
         </p>
         {label ? (
-          <p className="mt-2 font-display text-base text-[var(--rose-deep)]">
+          <p className="mt-2 font-body text-base text-[var(--rose-deep)]">
             {label}
           </p>
         ) : null}

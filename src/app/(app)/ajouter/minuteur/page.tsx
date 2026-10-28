@@ -11,7 +11,7 @@ export default function MinuteurPage() {
           Tirage
         </p>
         <h1 className="font-display text-4xl tracking-tight text-[var(--rose-deep)] sm:text-5xl">
-          Compte à rebours
+          Timer
         </h1>
         <p className="mx-auto max-w-sm text-sm text-[var(--ink-muted)]">
           Réglez la durée, lancez le minuteur, puis notez le volume.
