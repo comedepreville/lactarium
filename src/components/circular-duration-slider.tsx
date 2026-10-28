@@ -266,7 +266,7 @@ export function CircularDurationSlider({
         />
       </svg>
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-10 text-center">
-        <p className="font-body text-[3.25rem] font-medium leading-none tracking-tight text-[var(--ink)] tabular-nums">
+        <p className="font-display text-[3.25rem] font-medium leading-none tracking-tight text-[var(--ink)] tabular-nums">
           {value}
         </p>
         <p className="mt-1.5 font-body text-sm text-[var(--ink-muted)]">min</p>

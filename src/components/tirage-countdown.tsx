@@ -275,7 +275,7 @@ export function TirageCountdown() {
                 </>
               ) : (
                 <>
-                  <p className="font-body text-[3.25rem] font-medium leading-none tracking-tight text-[var(--ink)] tabular-nums">
+                  <p className="font-display text-[3.25rem] font-medium leading-none tracking-tight text-[var(--ink)] tabular-nums">
                     {formatMs(remainingMs)}
                   </p>
                   <p className="mt-2 font-body text-sm text-[var(--ink-muted)]">

@@ -32,14 +32,14 @@ export function DayList({
         >
           <header className="flex items-baseline justify-between gap-3 px-5 pb-3 pt-5">
             <div>
-              <h3 className="font-display text-2xl capitalize text-[var(--ink)]">
+              <h3 className="font-body text-2xl font-medium capitalize text-[var(--ink)]">
                 {day.label}
               </h3>
               <p className="mt-0.5 text-xs text-[var(--ink-muted)]">
                 {day.count} tirage{day.count > 1 ? "s" : ""}
               </p>
             </div>
-            <p className="font-body text-2xl font-medium tabular-nums text-[var(--rose-deep)]">
+            <p className="font-display text-2xl font-medium tabular-nums text-[var(--rose-deep)]">
               {day.totalMl}
               <span className="ml-1 text-sm font-normal text-[var(--ink-muted)]">
                 ml
