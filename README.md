@@ -93,6 +93,32 @@ Traefik route `lactae.app` et `www.lactae.app` vers le conteneur (port interne `
 docker compose down
 ```
 
+### Dépannage : `404 page not found` (texte brut)
+
+Ce message vient de **Traefik** (pas de Next.js) : DNS et TLS sont OK, mais aucun routeur ne matche `lactae.app`.
+
+Causes fréquentes après le passage à **Traefik v3** (nov. 2026) :
+- labels `headers.SSLRedirect` / `headers.SSLHost` (retirés en v3) → le middleware/routeur Lactae est ignoré
+- conteneur `lactarium` arrêté ou hors du réseau `common_network`
+- `LACTARIUM_HOST` vide au démarrage
+
+Sur le VPS, dans le dossier du projet :
+
+```bash
+# Confirmer l’erreur Traefik v3 (SSL* retiré)
+docker logs traefik 2>&1 | grep -i lactarium | tail -30
+
+# État du service
+docker ps -a --filter name=lactarium
+grep LACTARIUM_HOST .env   # doit être lactae.app
+
+# Relancer avec les labels v3-compatibles (ce dépôt)
+docker compose up -d --build --force-recreate
+
+# Vérifier
+curl -sI https://lactae.app
+```
+
 ## Dev local (sans Traefik)
 
 ```bash
