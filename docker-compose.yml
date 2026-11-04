@@ -1,3 +1,5 @@
+# LACTARIUM_HOST doit valoir lactae.app en prod.
+# Sans valeur (ou .env oublié), le défaut ci-dessous évite Host(``) → « 404 page not found ».
 services:
   lactarium:
     build:
@@ -19,9 +21,21 @@ services:
       VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:hello@lactae.app}
       SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
       CRON_SECRET: ${CRON_SECRET:-}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/').then((r)=>process.exit(r.status<500?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
     labels:
       - traefik.enable=true
-      - traefik.http.routers.lactarium.rule=Host(`${LACTARIUM_HOST}`) || Host(`www.${LACTARIUM_HOST}`)
+      - traefik.http.routers.lactarium.rule=Host(`${LACTARIUM_HOST:-lactae.app}`) || Host(`www.${LACTARIUM_HOST:-lactae.app}`)
       - traefik.http.routers.lactarium.entrypoints=web,websecure
       - traefik.http.routers.lactarium.tls=true
       - traefik.http.routers.lactarium.tls.certresolver=mytlschallenge
@@ -31,7 +45,7 @@ services:
       - traefik.http.middlewares.lactarium.headers.browserXSSFilter=true
       - traefik.http.middlewares.lactarium.headers.contentTypeNosniff=true
       - traefik.http.middlewares.lactarium.headers.forceSTSHeader=true
-      - traefik.http.middlewares.lactarium.headers.SSLHost=${LACTARIUM_HOST}
+      - traefik.http.middlewares.lactarium.headers.SSLHost=${LACTARIUM_HOST:-lactae.app}
       - traefik.http.middlewares.lactarium.headers.STSIncludeSubdomains=true
       - traefik.http.middlewares.lactarium.headers.STSPreload=true
       - traefik.http.services.lactarium.loadbalancer.server.port=3000

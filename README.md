@@ -93,6 +93,28 @@ Traefik route `lactae.app` et `www.lactae.app` vers le conteneur (port interne `
 docker compose down
 ```
 
+### Dépannage : `404 page not found` (texte brut)
+
+Ce message vient de **Traefik** (pas de Next.js) : DNS et TLS sont OK, mais aucun routeur ne matche `lactae.app`. Causes fréquentes : conteneur `lactarium` arrêté, hors du réseau `common_network`, ou `LACTARIUM_HOST` vide au démarrage.
+
+Sur le VPS, dans le dossier du projet :
+
+```bash
+# État
+docker ps -a --filter name=lactarium
+docker compose ps
+grep LACTARIUM_HOST .env   # doit être lactae.app
+
+# Relancer
+docker compose up -d --build
+
+# Logs si ça ne revient pas
+docker compose logs --tail=100 lactarium
+docker network inspect common_network | grep -A2 lactarium
+```
+
+Après un `up` réussi, `curl -sI https://lactae.app` doit répondre autre chose qu’un `404` texte brut Traefik.
+
 ## Dev local (sans Traefik)
 
 ```bash
