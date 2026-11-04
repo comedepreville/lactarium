@@ -1,7 +1,16 @@
 import { RETENTION_YEARS } from "@/lib/legal";
-import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin";
+import {
+  clearPoolBackoff,
+  createAdminClient,
+  hasAdminClient,
+  isPoolBackingOff,
+  isPoolSaturationError,
+  notePoolSaturation,
+} from "@/lib/supabase/admin";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+/** Premier passage bien après le boot / push, pour ne pas charger un pool déjà saturé. */
+const FIRST_RUN_DELAY_MS = 10 * 60_000;
 
 export type RetentionPurgeResult = {
   cutoffIso: string;
@@ -34,7 +43,7 @@ async function purgeRowsDirect(
     .delete({ count: "exact" })
     .lt("datetime", cutoffIso);
   if (tiragesError) {
-    throw new Error(`delete tirages: ${tiragesError.message}`);
+    throw tiragesError;
   }
 
   const { error: journalError, count: journalCount } = await admin
@@ -42,7 +51,7 @@ async function purgeRowsDirect(
     .delete({ count: "exact" })
     .lt("datetime", cutoffIso);
   if (journalError) {
-    throw new Error(`delete journal: ${journalError.message}`);
+    throw journalError;
   }
 
   return {
@@ -71,6 +80,10 @@ export async function purgeExpiredData(): Promise<RetentionPurgeResult> {
   );
 
   if (rpcError) {
+    // Un pool saturé : surtout pas de 2e vague de DELETE « fallback ».
+    if (isPoolSaturationError(rpcError)) {
+      throw rpcError;
+    }
     console.warn(
       "[retention] RPC indisponible, fallback delete direct:",
       rpcError.message,
@@ -97,7 +110,7 @@ export async function purgeExpiredData(): Promise<RetentionPurgeResult> {
       perPage,
     });
     if (error) {
-      throw new Error(`listUsers: ${error.message}`);
+      throw error;
     }
 
     const users = data.users ?? [];
@@ -136,6 +149,7 @@ export async function purgeExpiredData(): Promise<RetentionPurgeResult> {
 
 const retentionGlobal = globalThis as typeof globalThis & {
   __lactaeRetentionSchedulerStarted?: boolean;
+  __lactaeRetentionTickRunning?: boolean;
 };
 
 /** Vérifie la rétention une fois par jour (même processus que le scheduler push). */
@@ -151,17 +165,32 @@ export function startRetentionScheduler(): void {
   retentionGlobal.__lactaeRetentionSchedulerStarted = true;
 
   const tick = () => {
+    if (retentionGlobal.__lactaeRetentionTickRunning) return;
+    if (isPoolBackingOff()) {
+      console.info("[retention] Skip — pool en backoff");
+      return;
+    }
+
+    retentionGlobal.__lactaeRetentionTickRunning = true;
     void purgeExpiredData()
       .then((result) => {
+        clearPoolBackoff();
         console.info("[retention] purge", result);
       })
       .catch((error) => {
         console.error("[retention] purgeExpiredData", error);
+        if (isPoolSaturationError(error)) {
+          notePoolSaturation("retention");
+        }
+      })
+      .finally(() => {
+        retentionGlobal.__lactaeRetentionTickRunning = false;
       });
   };
 
-  // Différer le premier passage pour ne pas saturer le pool au boot avec le push.
-  setTimeout(tick, 60_000);
+  setTimeout(tick, FIRST_RUN_DELAY_MS);
   setInterval(tick, DAY_MS);
-  console.info("[retention] Scheduler démarré (toutes les 24 h, 1er passage +60s)");
+  console.info(
+    `[retention] Scheduler démarré (toutes les 24 h, 1er passage +${FIRST_RUN_DELAY_MS / 60000} min)`,
+  );
 }
