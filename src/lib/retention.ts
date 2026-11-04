@@ -160,7 +160,8 @@ export function startRetentionScheduler(): void {
       });
   };
 
-  tick();
+  // Différer le premier passage pour ne pas saturer le pool au boot avec le push.
+  setTimeout(tick, 60_000);
   setInterval(tick, DAY_MS);
-  console.info("[retention] Scheduler démarré (toutes les 24 h)");
+  console.info("[retention] Scheduler démarré (toutes les 24 h, 1er passage +60s)");
 }

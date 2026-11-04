@@ -14,6 +14,31 @@ import { createClient } from "@/lib/supabase/client";
 
 type Mode = "login" | "signup";
 
+function formatAuthError(err: unknown): string {
+  const raw =
+    err && typeof err === "object" && "message" in err
+      ? String((err as { message: unknown }).message)
+      : err instanceof Error
+        ? err.message
+        : "Une erreur est survenue";
+  const lower = raw.toLowerCase();
+  if (lower.includes("invalid login credentials")) {
+    return "E-mail ou mot de passe incorrect.";
+  }
+  if (lower.includes("email not confirmed")) {
+    return "Confirmez votre e-mail avant de vous connecter.";
+  }
+  if (
+    lower.includes("failed to fetch") ||
+    lower.includes("network") ||
+    lower.includes("connection pool") ||
+    lower.includes("timed out")
+  ) {
+    return "Service temporairement indisponible. Réessayez dans une minute.";
+  }
+  return raw;
+}
+
 export function AuthForm({ mode }: { mode: Mode }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -89,9 +114,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
         router.replace("/onboarding");
         router.refresh();
       } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Une erreur est survenue";
-        setError(message);
+        setError(formatAuthError(err));
       }
     });
   }
