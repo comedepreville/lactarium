@@ -41,9 +41,9 @@ export default async function HomePage() {
   const showAlert = showsHealthAlert(advice);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <header className="animate-rise px-1 pt-1">
-        <h1 className="font-display text-[2rem] leading-[1.08] tracking-tight text-balance text-[var(--rose-deep)] sm:text-4xl">
+        <h1 className="font-display text-3xl leading-[1.1] tracking-tight text-balance text-[var(--rose-deep)]">
           {firstName ? (
             <>
               {greeting},{" "}
@@ -56,24 +56,16 @@ export default async function HomePage() {
       </header>
 
       {showAlert ? (
-        <StatusBanner
-          status={advice.status}
-          message={advice.message}
-          className={
-            advice.status === "overdue"
-              ? "text-base font-medium shadow-[0_8px_20px_rgb(122_63_61_/_0.12)]"
-              : undefined
-          }
-        />
+        <StatusBanner status={advice.status} message={advice.message} />
       ) : null}
 
       <DashboardPanel advice={advice} />
 
-      <section className="space-y-4">
-        <h2 className="px-1 font-display text-2xl text-[var(--ink)]">
+      <section className="space-y-3">
+        <h2 className="px-1 font-display text-xl text-[var(--ink)]">
           Calendrier
         </h2>
-        <DayList days={recentDays} />
+        <DayList days={recentDays} showGaps={false} />
         {recentDays.length > 0 ? (
           <Link
             href="/calendrier"

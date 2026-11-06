@@ -22,7 +22,7 @@ export function StatusBanner({
     <div
       role="status"
       className={cn(
-        "rounded-2xl px-5 py-3.5 text-center text-sm leading-relaxed text-balance",
+        "rounded-[1.75rem] px-5 py-3.5 text-center text-sm leading-relaxed text-balance",
         statusStyles[status],
         className,
       )}

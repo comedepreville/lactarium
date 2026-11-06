@@ -16,9 +16,9 @@ export function DashboardPanel({ advice }: { advice: DashboardAdvice }) {
   const avgLabel = advice.avgMlLast2 > 0 ? `${advice.avgMlLast2}` : "—";
 
   return (
-    <section aria-label="Résumé" className="space-y-4">
+    <section aria-label="Résumé" className="space-y-3">
       <div
-        className="surface-card animate-rise rounded-[2rem] px-4 py-7 sm:px-6"
+        className="surface-card animate-rise rounded-[1.75rem] px-5 py-6"
         style={{ animationDelay: "40ms" }}
       >
         <CircularGauge
@@ -31,7 +31,7 @@ export function DashboardPanel({ advice }: { advice: DashboardAdvice }) {
       <UpcomingCard upcoming={advice.upcoming} />
 
       <ul
-        className="surface-card animate-rise grid grid-cols-3 gap-2 rounded-[2rem] p-2"
+        className="surface-card animate-rise grid grid-cols-3 gap-px overflow-hidden rounded-[1.75rem] bg-[var(--line)]/70"
         style={{ animationDelay: "120ms" }}
         aria-label="Indicateurs du jour"
       >
@@ -59,16 +59,16 @@ export function DashboardPanel({ advice }: { advice: DashboardAdvice }) {
 function UpcomingCard({ upcoming }: { upcoming: UpcomingTirage[] }) {
   return (
     <section
-      className="surface-card animate-rise rounded-[2rem] px-5 py-5 sm:px-6"
+      className="surface-card animate-rise rounded-[1.75rem] px-5 py-5"
       style={{ animationDelay: "80ms" }}
       aria-label="Prochains tirages"
     >
-      <p className="text-[0.7rem] font-medium uppercase tracking-[0.16em] text-[var(--ink-muted)]">
+      <p className="text-xs font-medium uppercase tracking-[0.14em] text-[var(--ink-muted)]">
         Prochains tirages
       </p>
 
       {upcoming.length === 0 ? (
-        <p className="mt-3 font-display text-[1.65rem] leading-none text-[var(--rose-deep)]">
+        <p className="mt-3 font-display text-4xl leading-none tracking-tight text-[var(--ink)]">
           Objectif atteint
         </p>
       ) : (
@@ -110,39 +110,39 @@ function UpcomingRow({
   return (
     <li
       className={cn(
-        "relative flex gap-4",
-        primary ? "pb-5" : "pb-3.5",
+        "relative flex gap-3.5",
+        primary ? "pb-4" : "pb-3",
         last && "pb-0",
       )}
     >
       <span
         aria-hidden
         className={cn(
-          "relative z-10 mt-[0.45rem] size-2.5 shrink-0 rounded-full ring-4 ring-[var(--surface)]",
+          "relative z-10 mt-[0.55rem] size-2.5 shrink-0 rounded-full ring-4 ring-[var(--surface)]",
           primary ? "bg-[var(--rose-dust)]" : "bg-[var(--rose-mist)]",
         )}
       />
       <div className="min-w-0" suppressHydrationWarning>
         {item.asap ? (
-          <p className="font-display text-[1.7rem] leading-[1.05] tracking-tight text-[var(--rose-deep)]">
+          <p className="font-display text-4xl leading-[1.05] tracking-tight text-[var(--ink)]">
             Dès que possible
             <span className="sr-only">, échéance dépassée</span>
           </p>
         ) : primary ? (
           <>
-            <p className="font-display text-[2.35rem] leading-none tracking-tight text-[var(--rose-deep)] tabular-nums">
+            <p className="font-display text-4xl leading-none tracking-tight text-[var(--ink)] tabular-nums">
               {time}
             </p>
             {lead ? (
-              <p className="mt-1.5 text-sm text-[var(--ink-muted)]">
+              <p className="mt-1.5 text-xs text-[var(--ink-muted)]">
                 {day ? `${day} · ${lead}` : lead}
               </p>
             ) : null}
           </>
         ) : (
-          <p className="font-body text-xl font-medium leading-none tabular-nums text-[var(--ink)]">
+          <p className="font-body text-base font-medium leading-none tabular-nums text-[var(--ink)]">
             {day ? (
-              <span className="mr-2 text-sm font-normal text-[var(--ink-muted)]">
+              <span className="mr-2 text-xs font-normal text-[var(--ink-muted)]">
                 {day}
               </span>
             ) : null}
@@ -166,11 +166,11 @@ function Insight({
   hint: string;
 }) {
   return (
-    <li className="rounded-[1.35rem] bg-[var(--blush)]/75 px-1 py-3.5 text-center">
-      <p className="text-[0.65rem] font-medium uppercase tracking-[0.14em] text-[var(--ink-muted)]">
+    <li className="bg-[var(--surface)] px-2 py-4 text-center">
+      <p className="text-xs font-medium uppercase tracking-[0.14em] text-[var(--ink-muted)]">
         {label}
       </p>
-      <p className="mt-1.5 font-body text-[1.65rem] font-medium leading-none tabular-nums text-[var(--ink)]">
+      <p className="mt-2 font-body text-2xl font-medium leading-none tabular-nums text-[var(--ink)]">
         {value}
         {unit ? (
           <span className="ml-0.5 text-xs font-normal tracking-normal text-[var(--ink-muted)]">
@@ -178,7 +178,7 @@ function Insight({
           </span>
         ) : null}
       </p>
-      <p className="mt-1.5 text-[0.7rem] leading-tight text-[var(--ink-muted)]">
+      <p className="mt-1.5 text-xs leading-tight text-[var(--ink-muted)]">
         {hint}
       </p>
     </li>
