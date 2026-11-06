@@ -1,5 +1,11 @@
 import { addHours, parseISO } from "date-fns";
-import type { DashboardAdvice, DaySummary, Tirage, TirageWithGap } from "./types";
+import type {
+  DashboardAdvice,
+  DaySummary,
+  Tirage,
+  TirageWithGap,
+  UpcomingTirage,
+} from "./types";
 import {
   MAX_INTERVAL_HOURS,
   MIN_INTERVAL_HOURS,
@@ -109,6 +115,34 @@ export function suggestIntervalHours(
   return { hours, cappedHigh };
 }
 
+/** Jusqu’à trois échéances : la prochaine, puis le même intervalle. */
+function buildUpcomingTirages(
+  now: Date,
+  nextSuggestedAt: string | null,
+  intervalHours: number | null,
+  remainingCount: number,
+): UpcomingTirage[] {
+  if (intervalHours == null || remainingCount <= 0 || !nextSuggestedAt) {
+    return [];
+  }
+
+  const count = Math.min(3, remainingCount);
+  const next = parseISO(nextSuggestedAt);
+  const late = next.getTime() <= now.getTime();
+  const origin = late ? now : next;
+
+  return Array.from({ length: count }, (_, index) => ({
+    at: roundToNearestMinute(
+      addHours(origin, intervalHours * index),
+    ).toISOString(),
+    asap: late && index === 0,
+  }));
+}
+
+function roundToNearestMinute(date: Date): Date {
+  return new Date(Math.round(date.getTime() / 60_000) * 60_000);
+}
+
 export function computeDashboard(
   tirages: Tirage[],
   targetMl: number = TARGET_ML_24H,
@@ -135,6 +169,7 @@ export function computeDashboard(
   const sorted = sortDesc(tirages);
   const last = sorted[0] ?? null;
   const lastTirageAt = last?.datetime ?? null;
+  const avgMlLast2 = sorted.length === 0 ? 0 : avgQuantity(sorted.slice(0, 2));
 
   /**
    * Première échéance depuis le dernier tirage :
@@ -150,6 +185,13 @@ export function computeDashboard(
     suggestedIntervalHours == null
       ? null
       : addHours(anchor, suggestedIntervalHours).toISOString();
+
+  const upcoming = buildUpcomingTirages(
+    now,
+    nextSuggestedAt,
+    suggestedIntervalHours,
+    remainingTiragesEstimate,
+  );
 
   const isNightWindow = isNightAt(now);
   const maxGapHours = MAX_INTERVAL_HOURS;
@@ -199,10 +241,12 @@ export function computeDashboard(
     remainingMl,
     tirageCountToday: todayTirages.length,
     avgMlLast3,
+    avgMlLast2,
     recommendedTiragesPerDay,
     remainingTiragesEstimate,
     lastTirageAt,
     nextSuggestedAt,
+    upcoming,
     suggestedIntervalHours,
     intervalCappedHigh,
     cadenceOverdue,

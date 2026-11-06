@@ -11,22 +11,21 @@ const links = [
   { href: "/journal", label: "Journal", icon: BookHeart },
 ];
 
-export function SiteHeader({ displayName }: { displayName?: string | null }) {
+export function SiteHeader() {
   const pathname = usePathname();
   const profileActive = pathname.startsWith("/profil");
 
   return (
     <header className="page-shell sticky top-0 z-40">
       <div className="mx-auto flex max-w-lg items-center justify-between gap-3 px-4 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
-        <Link href="/" prefetch={false} className="group min-w-0">
-          <span className="font-display text-2xl tracking-tight text-[var(--rose-deep)] transition-colors group-hover:text-[var(--rose-dust)]">
+        <Link
+          href="/"
+          prefetch={false}
+          className="group inline-flex h-9 items-center"
+        >
+          <span className="font-display text-2xl leading-none tracking-tight text-[var(--rose-deep)] transition-colors group-hover:text-[var(--rose-dust)]">
             Lactae
           </span>
-          {displayName ? (
-            <span className="mt-0.5 block truncate text-xs text-[var(--ink-muted)]">
-              {displayName}
-            </span>
-          ) : null}
         </Link>
 
         <div className="flex items-center gap-1">
