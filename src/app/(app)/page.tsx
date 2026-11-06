@@ -9,14 +9,26 @@ import { computeDashboard, lastNDays } from "@/lib/dashboard";
 import { getProfile } from "@/lib/profile";
 import { listTirages } from "@/lib/storage";
 import { TARGET_ML_24H, nowParis } from "@/lib/time";
+import type { DashboardAdvice } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 function greetingLabel() {
   const hour = nowParis().getHours();
   if (hour < 12) return "Bonjour";
-  if (hour < 18) return "Bon après-midi";
+  // Trait d’union insécable : « après-midi » ne se coupe pas en deux.
+  if (hour < 18) return "Bon après\u2011midi";
   return "Bonsoir";
+}
+
+/** Alertes qui ne répètent pas les chiffres déjà affichés. */
+function showsHealthAlert(advice: DashboardAdvice): boolean {
+  if (!advice.message) return false;
+  if (!advice.lastTirageAt) return true;
+  if (advice.status === "overdue" || advice.maxGapOverdue) return true;
+  if (advice.status === "ahead") return true;
+  if (advice.intervalCappedHigh && advice.remainingMl > 0) return true;
+  return false;
 }
 
 export default async function HomePage() {
@@ -25,52 +37,55 @@ export default async function HomePage() {
   const advice = computeDashboard(tirages, targetMl);
   const recentDays = lastNDays(tirages, 3);
   const greeting = greetingLabel();
-  const showTopAlert = advice.maxGapOverdue;
   const firstName = profile?.displayName?.trim();
+  const showAlert = showsHealthAlert(advice);
 
   return (
-    <div className="space-y-8">
-      <section className="animate-rise relative space-y-5 pt-2">
-        {showTopAlert && (
-          <StatusBanner
-            status="overdue"
-            message={advice.message}
-            className="animate-rise text-base font-medium shadow-[0_8px_20px_rgb(122_63_61_/_0.12)]"
-          />
-        )}
+    <div className="space-y-6">
+      <header className="animate-rise px-1 pt-1">
+        <h1 className="font-display text-[2rem] leading-[1.08] tracking-tight text-balance text-[var(--rose-deep)] sm:text-4xl">
+          {firstName ? (
+            <>
+              {greeting},{" "}
+              <span className="whitespace-nowrap">{firstName}</span>
+            </>
+          ) : (
+            greeting
+          )}
+        </h1>
+      </header>
 
-        <div className="space-y-2">
-          <p className="text-sm font-medium uppercase tracking-[0.18em] text-[var(--ink-muted)]">
-            {firstName ? `${greeting}, ${firstName}` : greeting}
-          </p>
-          <h1 className="font-display text-5xl leading-[0.95] tracking-tight text-[var(--rose-deep)] sm:text-6xl">
-            Lactae
-          </h1>
-          <p className="max-w-sm text-sm leading-relaxed text-[var(--ink-muted)]">
-            Vous êtes la meilleure, bravo !
-          </p>
-        </div>
-      </section>
+      {showAlert ? (
+        <StatusBanner
+          status={advice.status}
+          message={advice.message}
+          className={
+            advice.status === "overdue"
+              ? "text-base font-medium shadow-[0_8px_20px_rgb(122_63_61_/_0.12)]"
+              : undefined
+          }
+        />
+      ) : null}
 
-      <DashboardPanel advice={advice} hideStatusBanner={showTopAlert} />
-
-      <PushNotificationsCard onlyWhenInactive />
+      <DashboardPanel advice={advice} />
 
       <section className="space-y-4">
-        <div className="flex items-end justify-between gap-3 px-1">
-          <h2 className="font-display text-3xl text-[var(--ink)]">
-            Trois derniers jours
-          </h2>
+        <h2 className="px-1 font-display text-2xl text-[var(--ink)]">
+          Calendrier
+        </h2>
+        <DayList days={recentDays} />
+        {recentDays.length > 0 ? (
           <Link
             href="/calendrier"
             prefetch={false}
-            className="text-sm font-medium text-[var(--rose-deep)] underline-offset-4 hover:underline"
+            className="surface-card flex h-12 w-full items-center justify-center rounded-full text-sm font-medium text-[var(--rose-deep)] transition-colors hover:bg-[var(--blush)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--rose-dust)]/40"
           >
             Voir plus
           </Link>
-        </div>
-        <DayList days={recentDays} />
+        ) : null}
       </section>
+
+      <PushNotificationsCard onlyWhenInactive />
 
       <DeveloperCredit />
 

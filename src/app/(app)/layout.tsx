@@ -25,7 +25,7 @@ export default async function AppLayout({
   return (
     <>
       <ClearStalePushNotifications />
-      <SiteHeader displayName={profile?.displayName} />
+      <SiteHeader />
       <main className="page-shell mx-auto w-full max-w-lg flex-1 px-4 pb-20 pt-5">
         {children}
       </main>

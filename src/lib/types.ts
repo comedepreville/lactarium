@@ -50,19 +50,30 @@ export type TirageWithGap = Tirage & {
   gapMinutes: number | null;
 };
 
+export type UpcomingTirage = {
+  /** ISO UTC */
+  at: string;
+  /** Échéance déjà passée : afficher « Dès que possible » plutôt que l’heure */
+  asap: boolean;
+};
+
 export type DashboardAdvice = {
   targetMl: number;
   /** Volume déjà tiré sur la journée calendaire Europe/Paris */
   drawnMlToday: number;
   remainingMl: number;
   tirageCountToday: number;
-  /** Moyenne glissante des 3 derniers tirages (cross-day) */
+  /** Moyenne glissante des 3 derniers tirages (cross-day), sert à la cadence */
   avgMlLast3: number;
+  /** Moyenne des 2 derniers tirages ; 0 s’il n’y en a aucun */
+  avgMlLast2: number;
   recommendedTiragesPerDay: number;
   remainingTiragesEstimate: number;
   lastTirageAt: string | null;
   /** Prochain tirage recommandé (ISO), null si objectif du jour atteint */
   nextSuggestedAt: string | null;
+  /** Jusqu’à trois prochaines échéances, la première en tête */
+  upcoming: UpcomingTirage[];
   /** Intervalle suggéré en heures, borné entre 1 h et 5 h */
   suggestedIntervalHours: number | null;
   /** true si le calcul brut dépassait 5 h (plafond appliqué) */
