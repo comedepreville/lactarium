@@ -62,7 +62,7 @@ export default async function HomePage() {
       <DashboardPanel advice={advice} />
 
       <section className="space-y-3">
-        <h2 className="px-1 font-display text-xl text-[var(--ink)]">
+        <h2 className="px-1 font-display text-3xl tracking-tight text-[var(--ink)]">
           Calendrier
         </h2>
         <DayList days={recentDays} showGaps={false} />

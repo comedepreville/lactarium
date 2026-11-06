@@ -18,14 +18,19 @@ export function DashboardPanel({ advice }: { advice: DashboardAdvice }) {
   return (
     <section aria-label="Résumé" className="space-y-3">
       <div
-        className="surface-card animate-rise rounded-[1.75rem] px-5 py-6"
+        className="surface-card animate-rise rounded-[1.75rem] px-5 py-5"
         style={{ animationDelay: "40ms" }}
       >
-        <CircularGauge
-          value={advice.drawnMlToday}
-          max={advice.targetMl || TARGET_ML_24H}
-          label="aujourd’hui"
-        />
+        <p className="text-xs font-medium uppercase tracking-[0.14em] text-[var(--ink-muted)]">
+          Objectif
+        </p>
+        <div className="mt-4">
+          <CircularGauge
+            value={advice.drawnMlToday}
+            max={advice.targetMl || TARGET_ML_24H}
+            label="aujourd’hui"
+          />
+        </div>
       </div>
 
       <UpcomingCard upcoming={advice.upcoming} />
@@ -68,7 +73,7 @@ function UpcomingCard({ upcoming }: { upcoming: UpcomingTirage[] }) {
       </p>
 
       {upcoming.length === 0 ? (
-        <p className="mt-3 font-display text-4xl leading-none tracking-tight text-[var(--ink)]">
+        <p className="mt-3 font-display text-3xl leading-[1.1] tracking-tight text-[var(--ink)]">
           Objectif atteint
         </p>
       ) : (
@@ -124,13 +129,13 @@ function UpcomingRow({
       />
       <div className="min-w-0" suppressHydrationWarning>
         {item.asap ? (
-          <p className="font-display text-4xl leading-[1.05] tracking-tight text-[var(--ink)]">
+          <p className="font-display text-3xl leading-[1.1] tracking-tight text-[var(--ink)]">
             Dès que possible
             <span className="sr-only">, échéance dépassée</span>
           </p>
         ) : primary ? (
           <>
-            <p className="font-display text-4xl leading-none tracking-tight text-[var(--ink)] tabular-nums">
+            <p className="font-display text-3xl leading-[1.1] tracking-tight text-[var(--ink)] tabular-nums">
               {time}
             </p>
             {lead ? (
