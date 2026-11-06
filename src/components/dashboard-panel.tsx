@@ -130,7 +130,7 @@ function UpcomingRow({
       <div className="min-w-0" suppressHydrationWarning>
         {item.asap ? (
           <p className="font-display text-3xl leading-[1.1] tracking-tight text-[var(--ink)]">
-            Dès que possible
+            Maintenant
             <span className="sr-only">, échéance dépassée</span>
           </p>
         ) : primary ? (

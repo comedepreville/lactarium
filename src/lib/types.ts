@@ -53,7 +53,7 @@ export type TirageWithGap = Tirage & {
 export type UpcomingTirage = {
   /** ISO UTC */
   at: string;
-  /** Échéance déjà passée : afficher « Dès que possible » plutôt que l’heure */
+  /** Échéance déjà passée : afficher « Maintenant » plutôt que l’heure */
   asap: boolean;
 };
 
