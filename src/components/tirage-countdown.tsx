@@ -1,14 +1,30 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { useRouter } from "next/navigation";
 import { CircularDurationSlider } from "@/components/circular-duration-slider";
 import { Button } from "@/components/ui/button";
 import {
   cancelTimerDonePush,
+  fetchPendingTimerDone,
   scheduleTimerDonePush,
 } from "@/lib/push/client";
 import { playTimerDoneChime, vibrateTimerDone } from "@/lib/timer-chime";
+import {
+  clearTimerSession,
+  formatTimerMs,
+  readTimerSession,
+  resolveTimerSession,
+  sessionFromPendingPush,
+  subscribeTimerSession,
+  writeTimerSession,
+} from "@/lib/timer-session";
 import { cn } from "@/lib/utils";
 import { Pause, Play, RotateCcw } from "lucide-react";
 
@@ -56,13 +72,6 @@ function subscribeDurationStorage(onStoreChange: () => void) {
     window.removeEventListener("storage", onStoreChange);
     window.removeEventListener(DURATION_CHANGE_EVENT, onStoreChange);
   };
-}
-
-function formatMs(ms: number): string {
-  const totalSec = Math.max(0, Math.ceil(ms / 1000));
-  const m = Math.floor(totalSec / 60);
-  const s = totalSec % 60;
-  return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 }
 
 function CountdownRing({
@@ -118,64 +127,111 @@ function CountdownRing({
 export function TirageCountdown() {
   const router = useRouter();
   const durationLabelId = useId();
-  const durationMin = useSyncExternalStore(
+  const preferredDuration = useSyncExternalStore(
     subscribeDurationStorage,
     readStoredDuration,
     () => DURATION_DEFAULT,
   );
-  const [phase, setPhase] = useState<Phase>("setup");
-  const [remainingMs, setRemainingMs] = useState(DURATION_DEFAULT * 60_000);
-  const endAtRef = useRef<number | null>(null);
-  const remainingOnPauseRef = useRef(DURATION_DEFAULT * 60_000);
-  const redirectedRef = useRef(false);
-  const rafRef = useRef<number | null>(null);
+  const session = useSyncExternalStore(
+    subscribeTimerSession,
+    readTimerSession,
+    () => null,
+  );
 
+  const [now, setNow] = useState(() => Date.now());
+  const [setupDurationMin, setSetupDurationMin] = useState<number | null>(null);
+  const redirectedRef = useRef(false);
+  const serverRestoreTriedRef = useRef(false);
+
+  const resolved = session ? resolveTimerSession(session, now) : null;
+  const phase: Phase = resolved?.phase ?? "setup";
+  const durationMin =
+    resolved?.durationMin ?? setupDurationMin ?? preferredDuration;
+  const remainingMs =
+    resolved?.remainingMs ?? durationMin * 60_000;
   const totalMs = durationMin * 60_000;
   const progress = phase === "setup" ? 1 : remainingMs / totalMs;
 
+  // Horloge : uniquement en running ; au retour premier plan on resync via `now`.
   useEffect(() => {
-    if (phase !== "running") {
-      if (rafRef.current != null) {
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
+    if (phase !== "running") return;
+
+    let raf = 0;
+    const tick = () => {
+      setNow(Date.now());
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+
+    function onResume() {
+      if (document.visibilityState === "visible") {
+        setNow(Date.now());
       }
-      return;
+    }
+    function onPageShow(event: PageTransitionEvent) {
+      if (event.persisted) setNow(Date.now());
     }
 
-    const tick = () => {
-      const endAt = endAtRef.current;
-      if (endAt == null) return;
-      const left = endAt - Date.now();
-      if (left <= 0) {
-        setRemainingMs(0);
-        setPhase("done");
-        return;
-      }
-      setRemainingMs(left);
-      rafRef.current = requestAnimationFrame(tick);
-    };
+    document.addEventListener("visibilitychange", onResume);
+    window.addEventListener("focus", onResume);
+    window.addEventListener("pageshow", onPageShow);
 
-    rafRef.current = requestAnimationFrame(tick);
     return () => {
-      if (rafRef.current != null) {
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
-      }
+      cancelAnimationFrame(raf);
+      document.removeEventListener("visibilitychange", onResume);
+      window.removeEventListener("focus", onResume);
+      window.removeEventListener("pageshow", onPageShow);
     };
-  }, [phase]);
+  }, [phase, session?.endAt, session?.updatedAt]);
+
+  // Secours : notif serveur pending si localStorage vide (après hydrate client).
+  useEffect(() => {
+    if (session || serverRestoreTriedRef.current) return;
+    serverRestoreTriedRef.current = true;
+
+    void (async () => {
+      const pending = await fetchPendingTimerDone();
+      if (!pending) return;
+      if (readTimerSession()) return;
+      const fromPush = sessionFromPendingPush({
+        fireAtIso: pending.fireAt,
+        durationMin: pending.durationMin,
+      });
+      if (!fromPush) return;
+      writeTimerSession({
+        phase: fromPush.phase,
+        durationMin: fromPush.durationMin,
+        endAt: fromPush.endAt,
+        remainingMs: fromPush.remainingMs,
+      });
+      setNow(Date.now());
+    })();
+  }, [session]);
+
+  // Ré-arme le push si la session locale a survécu au kill PWA.
+  useEffect(() => {
+    if (!session || session.phase !== "running" || session.endAt == null) {
+      return;
+    }
+    const left = session.endAt - Date.now();
+    if (left <= 0) return;
+    void scheduleTimerDonePush(new Date(session.endAt), session.durationMin);
+  }, [session]);
 
   useEffect(() => {
     if (phase !== "done" || redirectedRef.current) return;
     redirectedRef.current = true;
-    // App au premier plan : son/vibration locaux ; annule le push pour éviter le doublon.
+    // On garde la session jusqu’à la navigation pour éviter un flash « setup ».
     void cancelTimerDonePush();
     playTimerDoneChime();
     vibrateTimerDone();
 
     const datetime = new Date().toISOString();
+    const doneDuration = durationMin;
     const timer = window.setTimeout(() => {
+      clearTimerSession();
       router.push(
-        `/ajouter?datetime=${encodeURIComponent(datetime)}&duration=${durationMin}`,
+        `/ajouter?datetime=${encodeURIComponent(datetime)}&duration=${doneDuration}`,
       );
     }, REDIRECT_DELAY_MS);
 
@@ -184,46 +240,59 @@ export function TirageCountdown() {
 
   function onDurationChange(next: number) {
     persistDuration(next);
-    setRemainingMs(next * 60_000);
-    remainingOnPauseRef.current = next * 60_000;
+    setSetupDurationMin(next);
   }
 
   function start() {
     redirectedRef.current = false;
-    persistDuration(durationMin);
-    const ms = durationMin * 60_000;
-    remainingOnPauseRef.current = ms;
-    setRemainingMs(ms);
+    const minutes = setupDurationMin ?? preferredDuration;
+    persistDuration(minutes);
+    const ms = minutes * 60_000;
     const endAt = Date.now() + ms;
-    endAtRef.current = endAt;
-    setPhase("running");
-    void scheduleTimerDonePush(new Date(endAt));
+    writeTimerSession({
+      phase: "running",
+      durationMin: minutes,
+      endAt,
+      remainingMs: null,
+    });
+    setNow(Date.now());
+    void scheduleTimerDonePush(new Date(endAt), minutes);
   }
 
   function pause() {
-    if (endAtRef.current != null) {
-      remainingOnPauseRef.current = Math.max(0, endAtRef.current - Date.now());
-      setRemainingMs(remainingOnPauseRef.current);
+    if (!session || session.phase !== "running" || session.endAt == null) {
+      return;
     }
-    endAtRef.current = null;
-    setPhase("paused");
+    const left = Math.max(0, session.endAt - Date.now());
+    writeTimerSession({
+      phase: "paused",
+      durationMin: session.durationMin,
+      endAt: null,
+      remainingMs: left,
+    });
+    setNow(Date.now());
     void cancelTimerDonePush();
   }
 
   function resume() {
-    const endAt = Date.now() + remainingOnPauseRef.current;
-    endAtRef.current = endAt;
-    setPhase("running");
-    void scheduleTimerDonePush(new Date(endAt));
+    if (!session || session.phase !== "paused") return;
+    const left = Math.max(0, session.remainingMs ?? 0);
+    const endAt = Date.now() + left;
+    writeTimerSession({
+      phase: "running",
+      durationMin: session.durationMin,
+      endAt,
+      remainingMs: null,
+    });
+    setNow(Date.now());
+    void scheduleTimerDonePush(new Date(endAt), session.durationMin);
   }
 
   function reset() {
-    endAtRef.current = null;
     redirectedRef.current = false;
-    const ms = durationMin * 60_000;
-    remainingOnPauseRef.current = ms;
-    setRemainingMs(ms);
-    setPhase("setup");
+    setSetupDurationMin(null);
+    clearTimerSession();
+    setNow(Date.now());
     void cancelTimerDonePush();
   }
 
@@ -276,7 +345,7 @@ export function TirageCountdown() {
               ) : (
                 <>
                   <p className="font-display text-[3.25rem] font-medium leading-none tracking-tight text-[var(--ink)] tabular-nums">
-                    {formatMs(remainingMs)}
+                    {formatTimerMs(remainingMs)}
                   </p>
                   <p className="mt-2 font-body text-sm text-[var(--ink-muted)]">
                     {phase === "paused" ? "En pause" : `${durationMin} min`}

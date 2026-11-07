@@ -86,7 +86,10 @@ export async function rescheduleReminder10Min(): Promise<{
   return { scheduled: true, fireAt: fireAt.toISOString() };
 }
 
-export async function scheduleTimerDone(fireAtIso: string): Promise<void> {
+export async function scheduleTimerDone(
+  fireAtIso: string,
+  durationMin?: number,
+): Promise<void> {
   const fireAt = parseISO(fireAtIso);
   if (Number.isNaN(fireAt.getTime())) {
     throw new Error("fireAt invalide");
@@ -95,16 +98,58 @@ export async function scheduleTimerDone(fireAtIso: string): Promise<void> {
     throw new Error("fireAt déjà passé");
   }
 
+  const durationQuery =
+    durationMin != null && Number.isFinite(durationMin)
+      ? `&duration=${Math.round(durationMin)}`
+      : "";
+
   await insertPending({
     kind: "timer_done",
     dedupeKey: TIMER_DEDUPE,
     fireAt,
     title: "Tirage fini !",
     body: "C’est le moment de noter le volume.",
-    url: `/ajouter?datetime=${encodeURIComponent(fireAt.toISOString())}`,
+    url: `/ajouter?datetime=${encodeURIComponent(fireAt.toISOString())}${durationQuery}`,
   });
 }
 
 export async function cancelTimerDone(): Promise<void> {
   await cancelPending(TIMER_DEDUPE);
+}
+
+/** Notif `timer_done` encore pending — utile pour reconstituer le minuteur côté front. */
+export async function getPendingTimerDone(): Promise<{
+  fireAt: string;
+  durationMin: number | null;
+} | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("scheduled_notifications")
+    .select("fire_at, url")
+    .eq("kind", "timer_done")
+    .eq("dedupe_key", TIMER_DEDUPE)
+    .eq("status", "pending")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  const fireAtMs = Date.parse(data.fire_at);
+  if (!Number.isFinite(fireAtMs) || fireAtMs <= Date.now()) {
+    return null;
+  }
+
+  let durationMin: number | null = null;
+  try {
+    const url = new URL(data.url, "https://lactae.app");
+    const raw = url.searchParams.get("duration");
+    if (raw != null) {
+      const parsed = Number.parseInt(raw, 10);
+      if (Number.isFinite(parsed)) durationMin = parsed;
+    }
+  } catch {
+    durationMin = null;
+  }
+
+  return { fireAt: data.fire_at, durationMin };
 }
