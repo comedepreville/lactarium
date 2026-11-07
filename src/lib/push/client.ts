@@ -99,7 +99,10 @@ export async function unsubscribeFromPush(): Promise<void> {
   await subscription.unsubscribe().catch(() => undefined);
 }
 
-export async function scheduleTimerDonePush(fireAt: Date): Promise<void> {
+export async function scheduleTimerDonePush(
+  fireAt: Date,
+  durationMin?: number,
+): Promise<void> {
   if (!pushApiSupported()) return;
   try {
     await fetch("/api/push/schedule", {
@@ -108,10 +111,28 @@ export async function scheduleTimerDonePush(fireAt: Date): Promise<void> {
       body: JSON.stringify({
         action: "timer_done",
         fireAt: fireAt.toISOString(),
+        ...(durationMin != null ? { durationMin } : {}),
       }),
     });
   } catch {
     /* best-effort */
+  }
+}
+
+/** Secours : minuteur encore pending côté serveur (après kill PWA / localStorage vide). */
+export async function fetchPendingTimerDone(): Promise<{
+  fireAt: string;
+  durationMin: number | null;
+} | null> {
+  try {
+    const response = await fetch("/api/push/schedule", { method: "GET" });
+    if (!response.ok) return null;
+    const data = (await response.json()) as {
+      pending?: { fireAt: string; durationMin: number | null } | null;
+    };
+    return data.pending ?? null;
+  } catch {
+    return null;
   }
 }
 

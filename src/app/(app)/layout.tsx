@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { ActiveTimerBanner } from "@/components/active-timer-banner";
 import { ClearStalePushNotifications } from "@/components/clear-stale-push-notifications";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser, getProfile, isOnboardingComplete } from "@/lib/profile";
@@ -26,6 +27,7 @@ export default async function AppLayout({
     <>
       <ClearStalePushNotifications />
       <SiteHeader />
+      <ActiveTimerBanner />
       <main className="page-shell mx-auto w-full max-w-lg flex-1 px-4 pb-20 pt-5">
         {children}
       </main>
