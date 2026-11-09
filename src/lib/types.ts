@@ -63,27 +63,21 @@ export type DashboardAdvice = {
   drawnMlToday: number;
   remainingMl: number;
   tirageCountToday: number;
-  /** Moyenne glissante des 3 derniers tirages (cross-day), sert à la cadence */
+  /** Moyenne des 3 derniers tirages (cross-day) */
   avgMlLast3: number;
-  /** Moyenne des 2 derniers tirages ; 0 s’il n’y en a aucun */
-  avgMlLast2: number;
-  recommendedTiragesPerDay: number;
+  /** Tirages encore nécessaires avant le cutoff du jour */
   remainingTiragesEstimate: number;
   lastTirageAt: string | null;
   /** Prochain tirage recommandé (ISO), null si objectif du jour atteint */
   nextSuggestedAt: string | null;
-  /** Jusqu’à trois prochaines échéances, la première en tête */
+  /** Trois prochaines échéances (déborde sur le lendemain si besoin) */
   upcoming: UpcomingTirage[];
-  /** Intervalle entre créneaux (h), borné entre 1 h et 5 h */
-  suggestedIntervalHours: number | null;
-  /** true si le calcul brut dépassait 5 h (plafond appliqué) */
+  /** true si le calcul brut d’intervalle dépassait 5 h (plafond appliqué) */
   intervalCappedHigh: boolean;
-  /** Premier créneau = « Maintenant » (≥ 5 h depuis le dernier tirage) */
-  cadenceOverdue: boolean;
   /** ≥ 5 h depuis le dernier tirage */
   maxGapOverdue: boolean;
-  maxGapHours: number;
-  isNightWindow: boolean;
+  /** Fin de fenêtre « aujourd’hui » (minuit − durée chrono − 10 min), ISO */
+  cutoffAt: string;
   status: "ok" | "behind" | "ahead" | "overdue";
   message: string;
 };
