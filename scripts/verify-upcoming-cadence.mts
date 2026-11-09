@@ -21,10 +21,8 @@ function tirage(id: string, iso: string, quantityMl: number): Tirage {
     id,
     datetime: iso,
     quantityMl,
-    durationMin: 15,
+    duration: 15,
     notes: null,
-    createdAt: iso,
-    updatedAt: iso,
   };
 }
 
