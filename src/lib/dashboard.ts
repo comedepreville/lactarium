@@ -8,7 +8,6 @@ import type {
 } from "./types";
 import {
   MAX_INTERVAL_HOURS,
-  MIN_INTERVAL_HOURS,
   TARGET_ML_24H,
   formatParisDate,
   formatParisDateShort,
@@ -16,7 +15,6 @@ import {
   isNightAt,
   minutesBetween,
   parisDateKey,
-  startOfNextParisDay,
 } from "./time";
 
 const FALLBACK_AVG_ML = 100;
@@ -95,82 +93,77 @@ export function estimateRemainingTirages(
   return Math.max(1, Math.ceil(remainingMl / Math.max(avgMlPerTirage, 10)));
 }
 
-/**
- * Intervalle jusqu’au prochain tirage :
- * temps restant aujourd’hui / tirages restants, borné entre 1 h et 5 h.
- */
-export function suggestIntervalHours(
-  hoursLeftToday: number,
-  remainingTirages: number,
-): { hours: number | null; cappedHigh: boolean } {
-  if (remainingTirages <= 0) {
-    return { hours: null, cappedHigh: false };
-  }
-  const raw = hoursLeftToday / remainingTirages;
-  const cappedHigh = raw > MAX_INTERVAL_HOURS;
-  const hours = Math.min(
-    MAX_INTERVAL_HOURS,
-    Math.max(MIN_INTERVAL_HOURS, raw),
-  );
-  return { hours, cappedHigh };
-}
-
-/**
- * Jusqu’à trois échéances avant minuit Paris.
- *
- * La première suit `nextSuggestedAt` (échéance ancrée au dernier tirage).
- * Si elle est déjà passée, on repart de maintenant avec un intervalle
- * recalculé sur le temps réellement restant aujourd’hui / tirages restants
- * — le même ratio que l’indicateur « Restants avant minuit ».
- * Les créneaux après minuit sont exclus (sauf le premier « Maintenant »).
- */
-function buildUpcomingTirages(
-  now: Date,
-  nextSuggestedAt: string | null,
-  intervalHours: number | null,
-  remainingCount: number,
-): UpcomingTirage[] {
-  if (remainingCount <= 0 || !nextSuggestedAt) {
-    return [];
-  }
-
-  const next = parseISO(nextSuggestedAt);
-  const late = next.getTime() <= now.getTime();
-
-  let origin: Date;
-  let spacingHours: number;
-  if (late) {
-    const { hours } = suggestIntervalHours(
-      hoursUntilEndOfParisDay(now),
-      remainingCount,
-    );
-    if (hours == null) return [];
-    origin = now;
-    spacingHours = hours;
-  } else {
-    if (intervalHours == null) return [];
-    origin = next;
-    spacingHours = intervalHours;
-  }
-
-  const count = Math.min(3, remainingCount);
-  const endOfDayMs = startOfNextParisDay(now).getTime();
-  const upcoming: UpcomingTirage[] = [];
-
-  for (let index = 0; index < count; index += 1) {
-    const at = roundToNearestMinute(addHours(origin, spacingHours * index));
-    const asap = late && index === 0;
-    // Garder « Maintenant » même s’il est pile à la frontière ; sinon
-    // n’afficher que des créneaux encore dans la journée Paris.
-    if (!asap && at.getTime() >= endOfDayMs) break;
-    upcoming.push({ at: at.toISOString(), asap });
-  }
-
-  return upcoming;
-}
-
 function roundToNearestMinute(date: Date): Date {
   return new Date(Math.round(date.getTime() / 60_000) * 60_000);
+}
+
+/**
+ * Cadence simple :
+ * 1. moyenne des 3 derniers → nb de tirages restants (volume restant / moyenne)
+ * 2. si dernier tirage > 5 h → « Maintenant », puis créneaux depuis maintenant
+ * 3. sinon → créneaux depuis le dernier tirage
+ * Intervalle = temps jusqu’à minuit (depuis l’origine) / tirages restants.
+ * Jusqu’à 3 créneaux affichés.
+ */
+function buildUpcomingSchedule(
+  now: Date,
+  lastTirageAt: string | null,
+  remainingCount: number,
+): {
+  upcoming: UpcomingTirage[];
+  intervalHours: number | null;
+  intervalCappedHigh: boolean;
+  nextSuggestedAt: string | null;
+} {
+  if (remainingCount <= 0) {
+    return {
+      upcoming: [],
+      intervalHours: null,
+      intervalCappedHigh: false,
+      nextSuggestedAt: null,
+    };
+  }
+
+  const hoursSinceLast = lastTirageAt
+    ? (now.getTime() - parseISO(lastTirageAt).getTime()) / (1000 * 60 * 60)
+    : null;
+  const overdue =
+    hoursSinceLast == null || hoursSinceLast >= MAX_INTERVAL_HOURS;
+
+  const origin = overdue ? now : parseISO(lastTirageAt!);
+  const hoursLeft = hoursUntilEndOfParisDay(origin);
+  const rawInterval = hoursLeft / remainingCount;
+  const intervalCappedHigh = rawInterval > MAX_INTERVAL_HOURS;
+  // Ne jamais proposer un écart > 5 h (risque engorgement / mastite).
+  const intervalHours = Math.min(MAX_INTERVAL_HOURS, Math.max(rawInterval, 0));
+
+  const count = Math.min(3, remainingCount);
+  const upcoming: UpcomingTirage[] = [];
+
+  if (overdue) {
+    // Le premier des restants, c’est maintenant ; les suivants suivent l’intervalle.
+    for (let i = 0; i < count; i += 1) {
+      upcoming.push({
+        at: roundToNearestMinute(addHours(origin, intervalHours * i)).toISOString(),
+        asap: i === 0,
+      });
+    }
+  } else {
+    // Le dernier tirage est déjà fait → 1er créneau à +1 intervalle.
+    for (let i = 1; i <= count; i += 1) {
+      upcoming.push({
+        at: roundToNearestMinute(addHours(origin, intervalHours * i)).toISOString(),
+        asap: false,
+      });
+    }
+  }
+
+  return {
+    upcoming,
+    intervalHours,
+    intervalCappedHigh,
+    nextSuggestedAt: upcoming[0]?.at ?? null,
+  };
 }
 
 export function computeDashboard(
@@ -201,37 +194,12 @@ export function computeDashboard(
   const lastTirageAt = last?.datetime ?? null;
   const avgMlLast2 = sorted.length === 0 ? 0 : avgQuantity(sorted.slice(0, 2));
 
-  /**
-   * Première échéance depuis le dernier tirage :
-   * ancrée sur lastTirageAt (pas sur « maintenant »), sinon chaque refresh
-   * invente une échéance suivante et masque le dépassement.
-   *
-   * L’intervalle divise le temps restant jusqu’à minuit *du jour des
-   * tirages restants* (aujourd’hui). Si le dernier tirage est un jour
-   * précédent, on part du temps restant maintenant — pas de la fin de
-   * la journée d’hier, qui faussait toute la timeline.
-   */
-  const anchor = lastTirageAt ? parseISO(lastTirageAt) : now;
-  const lastIsToday = Boolean(
-    lastTirageAt && parisDateKey(lastTirageAt) === todayKey,
-  );
-  const hoursForCadence = lastIsToday
-    ? hoursUntilEndOfParisDay(anchor)
-    : hoursUntilEndOfParisDay(now);
-  const { hours: suggestedIntervalHours, cappedHigh: intervalCappedHigh } =
-    suggestIntervalHours(hoursForCadence, remainingTiragesEstimate);
-
-  const nextSuggestedAt =
-    suggestedIntervalHours == null
-      ? null
-      : addHours(anchor, suggestedIntervalHours).toISOString();
-
-  const upcoming = buildUpcomingTirages(
-    now,
+  const {
+    upcoming,
+    intervalHours: suggestedIntervalHours,
+    intervalCappedHigh,
     nextSuggestedAt,
-    suggestedIntervalHours,
-    remainingTiragesEstimate,
-  );
+  } = buildUpcomingSchedule(now, lastTirageAt, remainingTiragesEstimate);
 
   const isNightWindow = isNightAt(now);
   const maxGapHours = MAX_INTERVAL_HOURS;
@@ -244,9 +212,7 @@ export function computeDashboard(
     hoursSinceLast >= MAX_INTERVAL_HOURS &&
     remainingMl > 0;
   const cadenceOverdue =
-    nextSuggestedAt != null &&
-    parseISO(nextSuggestedAt).getTime() <= now.getTime() &&
-    remainingMl > 0;
+    Boolean(upcoming[0]?.asap) && remainingMl > 0;
 
   let status: DashboardAdvice["status"] = "ok";
   let message = "";

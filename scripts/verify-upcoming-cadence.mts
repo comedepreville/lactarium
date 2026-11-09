@@ -1,6 +1,5 @@
 /**
- * Vérifie que la timeline « Prochains tirages » reste cohérente avec
- * l’estimation « Restants avant minuit ».
+ * Vérifie la cadence simple des prochains tirages.
  *
  * Usage : npx tsx scripts/verify-upcoming-cadence.mts
  */
@@ -8,12 +7,7 @@ import { parseISO } from "date-fns";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { computeDashboard } from "../src/lib/dashboard";
-import {
-  hoursUntilEndOfParisDay,
-  parisDateKey,
-  startOfNextParisDay,
-  TZ,
-} from "../src/lib/time";
+import { TZ } from "../src/lib/time";
 import type { Tirage } from "../src/lib/types";
 
 function tirage(id: string, iso: string, quantityMl: number): Tirage {
@@ -34,8 +28,12 @@ function assert(cond: unknown, message: string): void {
   if (!cond) throw new Error(message);
 }
 
+function labels(advice: ReturnType<typeof computeDashboard>): string[] {
+  return advice.upcoming.map((u) => (u.asap ? "Maintenant" : parisFmt(u.at)));
+}
+
 function run() {
-  // 1) En retard le même jour : intervalle = temps restant maintenant / restants
+  // 1) Dernier tirage > 5 h → Maintenant + 2 suivants depuis maintenant
   {
     const now = parseISO("2026-11-09T15:00:00+01:00");
     const advice = computeDashboard(
@@ -47,58 +45,18 @@ function run() {
       800,
       now,
     );
-    // 200 ml tirés aujourd’hui → 600 ml restants / 100 ml ≈ 6 tirages
-    assert(advice.remainingTiragesEstimate === 6, "restants = 6 (200 ml tirés)");
+    // 200 ml aujourd’hui → 600 restants / 100 = 6
+    assert(advice.remainingTiragesEstimate === 6, "restants = 6");
+    assert(advice.upcoming.length === 3, "affiche 3 créneaux");
     assert(advice.upcoming[0]?.asap === true, "premier = Maintenant");
-    const expectedInterval =
-      hoursUntilEndOfParisDay(now) / advice.remainingTiragesEstimate;
-    const second = parseISO(advice.upcoming[1]!.at);
-    const deltaH = (second.getTime() - now.getTime()) / 3_600_000;
-    assert(
-      Math.abs(deltaH - expectedInterval) < 1 / 60,
-      `espacement retard ≈ ${expectedInterval}h, obtenu ${deltaH}`,
-    );
-    console.log("ok: retard même jour", {
+    assert(advice.maxGapOverdue === true, "plus de 5 h");
+    console.log("ok: > 5 h depuis dernier", {
       restants: advice.remainingTiragesEstimate,
-      upcoming: advice.upcoming.map((u) =>
-        u.asap ? "Maintenant" : parisFmt(u.at),
-      ),
+      upcoming: labels(advice),
     });
   }
 
-  // 2) Dernier tirage hier : ne plus utiliser les heures jusqu’à minuit d’hier
-  {
-    const now = parseISO("2026-11-09T10:00:00+01:00");
-    const advice = computeDashboard(
-      [tirage("a", "2026-11-08T22:00:00+01:00", 100)],
-      800,
-      now,
-    );
-    assert(advice.remainingTiragesEstimate === 8, "restants = 8");
-    assert(advice.upcoming[0]?.asap === true, "échéance hier → Maintenant");
-    const expectedInterval =
-      hoursUntilEndOfParisDay(now) / advice.remainingTiragesEstimate;
-    assert(
-      advice.suggestedIntervalHours != null &&
-        Math.abs(advice.suggestedIntervalHours - expectedInterval) < 1e-9,
-      "intervalle basé sur aujourd’hui, pas sur hier soir",
-    );
-    const end = startOfNextParisDay(now).getTime();
-    for (const u of advice.upcoming.slice(1)) {
-      assert(
-        parseISO(u.at).getTime() < end,
-        `créneau après le premier avant minuit: ${parisFmt(u.at)}`,
-      );
-    }
-    console.log("ok: dernier tirage hier", {
-      interval: advice.suggestedIntervalHours,
-      upcoming: advice.upcoming.map((u) =>
-        u.asap ? "Maintenant" : parisFmt(u.at),
-      ),
-    });
-  }
-
-  // 3) Pas en retard : échéance ancrée, créneaux du jour
+  // 2) Dernier tirage < 5 h → créneaux depuis le dernier (pas Maintenant)
   {
     const now = parseISO("2026-11-09T10:00:00+01:00");
     const advice = computeDashboard(
@@ -110,19 +68,35 @@ function run() {
       800,
       now,
     );
+    // 300 ml → 500 / 100 = 5 restants ; depuis 08:00, I = 16/5 = 3.2
+    // → 11:12, 14:24, 17:36
+    assert(advice.remainingTiragesEstimate === 5, "restants = 5");
+    assert(advice.upcoming.length === 3, "affiche 3 créneaux");
     assert(advice.upcoming[0]?.asap === false, "pas en retard");
-    assert(
-      parisDateKey(advice.upcoming[0]!.at) === "2026-11-09",
-      "prochaine échéance aujourd’hui",
-    );
-    assert(
-      advice.upcoming.length <= advice.remainingTiragesEstimate,
-      "pas plus de créneaux que de restants",
-    );
-    console.log("ok: journée en cours", {
+    assert(labels(advice)[0] === "2026-11-09 11:12", "1er depuis dernier");
+    assert(labels(advice)[1] === "2026-11-09 14:24", "2e");
+    assert(labels(advice)[2] === "2026-11-09 17:36", "3e");
+    console.log("ok: < 5 h depuis dernier", {
       restants: advice.remainingTiragesEstimate,
-      upcoming: advice.upcoming.map((u) => parisFmt(u.at)),
+      upcoming: labels(advice),
     });
+  }
+
+  // 3) Objectif atteint → aucune échéance
+  {
+    const now = parseISO("2026-11-09T18:00:00+01:00");
+    const advice = computeDashboard(
+      [
+        tirage("a", "2026-11-09T16:00:00+01:00", 300),
+        tirage("b", "2026-11-09T12:00:00+01:00", 300),
+        tirage("c", "2026-11-09T08:00:00+01:00", 300),
+      ],
+      800,
+      now,
+    );
+    assert(advice.remainingTiragesEstimate === 0, "plus de restants");
+    assert(advice.upcoming.length === 0, "liste vide");
+    console.log("ok: objectif atteint");
   }
 
   console.log("\nTous les contrôles sont passés.");
