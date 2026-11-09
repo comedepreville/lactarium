@@ -12,7 +12,6 @@ import {
   TARGET_ML_24H,
   formatParisDate,
   formatParisDateShort,
-  hoursUntilEndOfParisDay,
   isNightAt,
   minutesBetween,
   parisDateKey,
@@ -101,10 +100,10 @@ function roundToNearestMinute(date: Date): Date {
 /**
  * Cadence simple :
  * 1. moyenne des 3 derniers → nb de tirages restants (volume restant / moyenne)
- * 2. si dernier tirage > 5 h → « Maintenant », puis créneaux depuis maintenant
+ * 2. si dernier tirage ≥ 5 h → « Maintenant », puis créneaux depuis maintenant
  * 3. sinon → créneaux depuis le dernier tirage
- * Intervalle = temps jusqu’à minuit (depuis l’origine) / tirages restants,
- * borné entre 1 h et 5 h.
+ * Intervalle = 24 h / tirages restants, borné entre 1 h et 5 h
+ * (la timeline continue après minuit, sans se rabattre sur 00:00).
  * Jusqu’à 3 créneaux affichés.
  */
 function buildUpcomingSchedule(
@@ -133,10 +132,10 @@ function buildUpcomingSchedule(
     hoursSinceLast == null || hoursSinceLast >= MAX_INTERVAL_HOURS;
 
   const origin = overdue ? now : parseISO(lastTirageAt!);
-  const hoursLeft = hoursUntilEndOfParisDay(origin);
-  const rawInterval = hoursLeft / remainingCount;
+  // Cadence sur 24 h, pas « jusqu’à minuit » — sinon le dernier créneau
+  // collait à 00:00 et la suite disparaissait.
+  const rawInterval = 24 / remainingCount;
   const intervalCappedHigh = rawInterval > MAX_INTERVAL_HOURS;
-  // Plancher 1 h (pas de tirages trop rapprochés) / plafond 5 h (mastite).
   const intervalHours = Math.min(
     MAX_INTERVAL_HOURS,
     Math.max(MIN_INTERVAL_HOURS, rawInterval),
@@ -149,7 +148,9 @@ function buildUpcomingSchedule(
     // Le premier des restants, c’est maintenant ; les suivants suivent l’intervalle.
     for (let i = 0; i < count; i += 1) {
       upcoming.push({
-        at: roundToNearestMinute(addHours(origin, intervalHours * i)).toISOString(),
+        at: roundToNearestMinute(
+          addHours(origin, intervalHours * i),
+        ).toISOString(),
         asap: i === 0,
       });
     }
@@ -157,7 +158,9 @@ function buildUpcomingSchedule(
     // Le dernier tirage est déjà fait → 1er créneau à +1 intervalle.
     for (let i = 1; i <= count; i += 1) {
       upcoming.push({
-        at: roundToNearestMinute(addHours(origin, intervalHours * i)).toISOString(),
+        at: roundToNearestMinute(
+          addHours(origin, intervalHours * i),
+        ).toISOString(),
         asap: false,
       });
     }

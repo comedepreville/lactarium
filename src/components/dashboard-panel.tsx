@@ -9,6 +9,7 @@ import {
   parisDateKey,
   startOfNextParisDay,
   TARGET_ML_24H,
+  toParis,
 } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
@@ -203,6 +204,8 @@ function formatLead(iso: string, now: Date): string {
 function dayQualifier(iso: string, now: Date): string | null {
   const key = parisDateKey(iso);
   if (key === parisDateKey(now)) return null;
+  // Avant 7 h : encore la nuit en cours, pas « demain ».
+  if (toParis(iso).getHours() < 7) return "cette nuit";
   if (key === parisDateKey(startOfNextParisDay(now))) return "demain";
   return formatParisDateShort(iso);
 }
