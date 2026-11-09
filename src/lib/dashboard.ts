@@ -8,6 +8,7 @@ import type {
 } from "./types";
 import {
   MAX_INTERVAL_HOURS,
+  MIN_INTERVAL_HOURS,
   TARGET_ML_24H,
   formatParisDate,
   formatParisDateShort,
@@ -102,7 +103,8 @@ function roundToNearestMinute(date: Date): Date {
  * 1. moyenne des 3 derniers → nb de tirages restants (volume restant / moyenne)
  * 2. si dernier tirage > 5 h → « Maintenant », puis créneaux depuis maintenant
  * 3. sinon → créneaux depuis le dernier tirage
- * Intervalle = temps jusqu’à minuit (depuis l’origine) / tirages restants.
+ * Intervalle = temps jusqu’à minuit (depuis l’origine) / tirages restants,
+ * borné entre 1 h et 5 h.
  * Jusqu’à 3 créneaux affichés.
  */
 function buildUpcomingSchedule(
@@ -134,8 +136,11 @@ function buildUpcomingSchedule(
   const hoursLeft = hoursUntilEndOfParisDay(origin);
   const rawInterval = hoursLeft / remainingCount;
   const intervalCappedHigh = rawInterval > MAX_INTERVAL_HOURS;
-  // Ne jamais proposer un écart > 5 h (risque engorgement / mastite).
-  const intervalHours = Math.min(MAX_INTERVAL_HOURS, Math.max(rawInterval, 0));
+  // Plancher 1 h (pas de tirages trop rapprochés) / plafond 5 h (mastite).
+  const intervalHours = Math.min(
+    MAX_INTERVAL_HOURS,
+    Math.max(MIN_INTERVAL_HOURS, rawInterval),
+  );
 
   const count = Math.min(3, remainingCount);
   const upcoming: UpcomingTirage[] = [];

@@ -74,7 +74,7 @@ export type DashboardAdvice = {
   nextSuggestedAt: string | null;
   /** Jusqu’à trois prochaines échéances, la première en tête */
   upcoming: UpcomingTirage[];
-  /** Intervalle entre créneaux (h), plafonné à 5 h */
+  /** Intervalle entre créneaux (h), borné entre 1 h et 5 h */
   suggestedIntervalHours: number | null;
   /** true si le calcul brut dépassait 5 h (plafond appliqué) */
   intervalCappedHigh: boolean;

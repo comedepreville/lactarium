@@ -99,6 +99,30 @@ function run() {
     console.log("ok: objectif atteint");
   }
 
+  // 4) Beaucoup de restants en fin de journée → intervalle plancher 1 h
+  {
+    const now = parseISO("2026-11-09T21:00:00+01:00");
+    const advice = computeDashboard(
+      [
+        tirage("a", "2026-11-09T20:00:00+01:00", 50),
+        tirage("b", "2026-11-09T18:00:00+01:00", 50),
+        tirage("c", "2026-11-09T16:00:00+01:00", 50),
+      ],
+      800,
+      now,
+    );
+    // 150 ml tirés → 650 / 50 = 13 restants ; 3 h restantes / 13 < 1 → plancher 1 h
+    assert(advice.remainingTiragesEstimate === 13, "restants = 13");
+    assert(advice.suggestedIntervalHours === 1, "plancher 1 h");
+    assert(labels(advice)[0] === "2026-11-09 21:00", "1er à +1 h");
+    assert(labels(advice)[1] === "2026-11-09 22:00", "2e à +2 h");
+    assert(labels(advice)[2] === "2026-11-09 23:00", "3e à +3 h");
+    console.log("ok: plancher 1 h", {
+      interval: advice.suggestedIntervalHours,
+      upcoming: labels(advice),
+    });
+  }
+
   console.log("\nTous les contrôles sont passés.");
 }
 
