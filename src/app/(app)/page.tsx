@@ -31,7 +31,6 @@ function showsHealthAlert(advice: DashboardAdvice): boolean {
   return false;
 }
 
-
 export default async function HomePage() {
   const [tirages, profile] = await Promise.all([listTirages(), getProfile()]);
   const targetMl = profile?.targetMl24h ?? TARGET_ML_24H;
