@@ -74,13 +74,13 @@ export type DashboardAdvice = {
   nextSuggestedAt: string | null;
   /** Jusqu’à trois prochaines échéances, la première en tête */
   upcoming: UpcomingTirage[];
-  /** Intervalle suggéré en heures, borné entre 1 h et 5 h */
+  /** Intervalle entre créneaux (h), borné entre 1 h et 5 h */
   suggestedIntervalHours: number | null;
   /** true si le calcul brut dépassait 5 h (plafond appliqué) */
   intervalCappedHigh: boolean;
-  /** Première échéance depuis le dernier tirage déjà dépassée */
+  /** Premier créneau = « Maintenant » (≥ 5 h depuis le dernier tirage) */
   cadenceOverdue: boolean;
-  /** Plus de 5 h depuis le dernier tirage */
+  /** ≥ 5 h depuis le dernier tirage */
   maxGapOverdue: boolean;
   maxGapHours: number;
   isNightWindow: boolean;
