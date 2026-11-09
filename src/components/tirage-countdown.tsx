@@ -17,6 +17,15 @@ import {
 } from "@/lib/push/client";
 import { playTimerDoneChime, vibrateTimerDone } from "@/lib/timer-chime";
 import {
+  persistTimerDuration,
+  readStoredTimerDuration,
+  subscribeTimerDuration,
+  TIMER_DURATION_DEFAULT,
+  TIMER_DURATION_MAX,
+  TIMER_DURATION_MIN,
+  TIMER_DURATION_STEP,
+} from "@/lib/timer-duration";
+import {
   clearTimerSession,
   formatTimerMs,
   readTimerSession,
@@ -28,51 +37,9 @@ import {
 import { cn } from "@/lib/utils";
 import { Pause, Play, RotateCcw } from "lucide-react";
 
-const DURATION_MIN = 5;
-const DURATION_MAX = 30;
-const DURATION_STEP = 5;
-/** Défaut si aucun réglage n’a encore été mémorisé. */
-const DURATION_DEFAULT = 25;
-const DURATION_STORAGE_KEY = "lactae:tirage-timer-duration";
-const DURATION_CHANGE_EVENT = "lactae:tirage-timer-duration";
 const REDIRECT_DELAY_MS = 1100;
 
 type Phase = "setup" | "running" | "paused" | "done";
-
-function clampDuration(minutes: number): number {
-  const snapped = Math.round(minutes / DURATION_STEP) * DURATION_STEP;
-  return Math.min(DURATION_MAX, Math.max(DURATION_MIN, snapped));
-}
-
-function readStoredDuration(): number {
-  try {
-    const raw = window.localStorage.getItem(DURATION_STORAGE_KEY);
-    if (raw == null) return DURATION_DEFAULT;
-    const parsed = Number.parseInt(raw, 10);
-    if (!Number.isFinite(parsed)) return DURATION_DEFAULT;
-    return clampDuration(parsed);
-  } catch {
-    return DURATION_DEFAULT;
-  }
-}
-
-function persistDuration(minutes: number) {
-  try {
-    window.localStorage.setItem(DURATION_STORAGE_KEY, String(minutes));
-    window.dispatchEvent(new Event(DURATION_CHANGE_EVENT));
-  } catch {
-    // Quota / mode privé : on ignore.
-  }
-}
-
-function subscribeDurationStorage(onStoreChange: () => void) {
-  window.addEventListener("storage", onStoreChange);
-  window.addEventListener(DURATION_CHANGE_EVENT, onStoreChange);
-  return () => {
-    window.removeEventListener("storage", onStoreChange);
-    window.removeEventListener(DURATION_CHANGE_EVENT, onStoreChange);
-  };
-}
 
 function CountdownRing({
   progress,
@@ -128,9 +95,9 @@ export function TirageCountdown() {
   const router = useRouter();
   const durationLabelId = useId();
   const preferredDuration = useSyncExternalStore(
-    subscribeDurationStorage,
-    readStoredDuration,
-    () => DURATION_DEFAULT,
+    subscribeTimerDuration,
+    readStoredTimerDuration,
+    () => TIMER_DURATION_DEFAULT,
   );
   const session = useSyncExternalStore(
     subscribeTimerSession,
@@ -239,14 +206,14 @@ export function TirageCountdown() {
   }, [phase, durationMin, router]);
 
   function onDurationChange(next: number) {
-    persistDuration(next);
+    persistTimerDuration(next);
     setSetupDurationMin(next);
   }
 
   function start() {
     redirectedRef.current = false;
     const minutes = setupDurationMin ?? preferredDuration;
-    persistDuration(minutes);
+    persistTimerDuration(minutes);
     const ms = minutes * 60_000;
     const endAt = Date.now() + ms;
     writeTimerSession({
@@ -320,9 +287,9 @@ export function TirageCountdown() {
             <CircularDurationSlider
               value={durationMin}
               onChange={onDurationChange}
-              min={DURATION_MIN}
-              max={DURATION_MAX}
-              step={DURATION_STEP}
+              min={TIMER_DURATION_MIN}
+              max={TIMER_DURATION_MAX}
+              step={TIMER_DURATION_STEP}
               aria-labelledby={durationLabelId}
             />
           </>

@@ -1,7 +1,14 @@
 "use client";
 
 import { parseISO } from "date-fns";
+import { useMemo, useSyncExternalStore } from "react";
 import { CircularGauge } from "@/components/circular-gauge";
+import { buildCadence } from "@/lib/dashboard";
+import {
+  readStoredTimerDuration,
+  subscribeTimerDuration,
+  TIMER_DURATION_DEFAULT,
+} from "@/lib/timer-duration";
 import type { DashboardAdvice, UpcomingTirage } from "@/lib/types";
 import {
   formatParisDateShort,
@@ -14,7 +21,29 @@ import {
 import { cn } from "@/lib/utils";
 
 export function DashboardPanel({ advice }: { advice: DashboardAdvice }) {
-  const avgLabel = advice.avgMlLast2 > 0 ? `${advice.avgMlLast2}` : "—";
+  const timerDurationMin = useSyncExternalStore(
+    subscribeTimerDuration,
+    readStoredTimerDuration,
+    () => TIMER_DURATION_DEFAULT,
+  );
+
+  const cadence = useMemo(
+    () =>
+      buildCadence(
+        new Date(),
+        advice.lastTirageAt,
+        advice.remainingTiragesEstimate,
+        timerDurationMin,
+      ),
+    [
+      advice.lastTirageAt,
+      advice.remainingTiragesEstimate,
+      timerDurationMin,
+    ],
+  );
+
+  const avgLabel = advice.lastTirageAt ? `${advice.avgMlLast3}` : "—";
+  const cutoffHint = `avant ${formatParisTime(cadence.cutoffAt)}`;
 
   return (
     <section aria-label="Résumé" className="space-y-3">
@@ -34,7 +63,7 @@ export function DashboardPanel({ advice }: { advice: DashboardAdvice }) {
         </div>
       </div>
 
-      <UpcomingCard upcoming={advice.upcoming} />
+      <UpcomingCard upcoming={cadence.upcoming} />
 
       <ul
         className="surface-card animate-rise grid grid-cols-3 gap-px overflow-hidden rounded-[1.75rem] bg-[var(--line)]/70"
@@ -49,13 +78,13 @@ export function DashboardPanel({ advice }: { advice: DashboardAdvice }) {
         <Insight
           label="Restants"
           value={`${advice.remainingTiragesEstimate}`}
-          hint="avant minuit"
+          hint={cutoffHint}
         />
         <Insight
           label="Moyenne"
           value={avgLabel}
-          unit={advice.avgMlLast2 > 0 ? "ml" : undefined}
-          hint="2 derniers"
+          unit={advice.lastTirageAt ? "ml" : undefined}
+          hint="3 derniers"
         />
       </ul>
     </section>
@@ -184,7 +213,7 @@ function Insight({
           </span>
         ) : null}
       </p>
-      <p className="mt-1.5 text-xs leading-tight text-[var(--ink-muted)]">
+      <p className="mt-1.5 text-xs leading-tight text-[var(--ink-muted)]" suppressHydrationWarning>
         {hint}
       </p>
     </li>
@@ -204,7 +233,6 @@ function formatLead(iso: string, now: Date): string {
 function dayQualifier(iso: string, now: Date): string | null {
   const key = parisDateKey(iso);
   if (key === parisDateKey(now)) return null;
-  // Avant 7 h : encore la nuit en cours, pas « demain ».
   if (toParis(iso).getHours() < 7) return "cette nuit";
   if (key === parisDateKey(startOfNextParisDay(now))) return "demain";
   return formatParisDateShort(iso);

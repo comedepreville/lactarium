@@ -5,12 +5,13 @@
  * Sur remount PWA / kill WebView, on recalcule le restant depuis `endAt`.
  */
 
+import {
+  clampTimerDuration,
+  TIMER_DURATION_MIN,
+} from "./timer-duration";
+
 export const TIMER_SESSION_STORAGE_KEY = "lactae:tirage-timer-session";
 export const TIMER_SESSION_CHANGE_EVENT = "lactae:tirage-timer-session";
-
-const DURATION_MIN = 5;
-const DURATION_MAX = 30;
-const DURATION_STEP = 5;
 
 export type TimerSessionPhase = "running" | "paused";
 
@@ -32,11 +33,6 @@ export type ResolvedTimerSession = {
   remainingMs: number;
 };
 
-function clampDuration(minutes: number): number {
-  const snapped = Math.round(minutes / DURATION_STEP) * DURATION_STEP;
-  return Math.min(DURATION_MAX, Math.max(DURATION_MIN, snapped));
-}
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
@@ -56,7 +52,7 @@ function parseSession(raw: string): TimerSession | null {
     return {
       version: 1,
       phase: parsed.phase,
-      durationMin: clampDuration(parsed.durationMin),
+      durationMin: clampTimerDuration(parsed.durationMin),
       endAt: parsed.endAt ?? null,
       remainingMs: parsed.remainingMs ?? null,
       updatedAt: parsed.updatedAt,
@@ -71,7 +67,7 @@ export function resolveTimerSession(
   session: TimerSession,
   now = Date.now(),
 ): ResolvedTimerSession {
-  const durationMin = clampDuration(session.durationMin);
+  const durationMin = clampTimerDuration(session.durationMin);
 
   if (session.phase === "paused") {
     const remainingMs = Math.max(0, session.remainingMs ?? 0);
@@ -130,7 +126,7 @@ export function writeTimerSession(
   const session: TimerSession = {
     version: 1,
     phase: input.phase,
-    durationMin: clampDuration(input.durationMin),
+    durationMin: clampTimerDuration(input.durationMin),
     endAt: input.endAt,
     remainingMs: input.remainingMs,
     updatedAt: Date.now(),
@@ -199,10 +195,10 @@ export function sessionFromPendingPush(input: {
   if (remainingMs <= 0) return null;
 
   const fromRemaining = Math.ceil(remainingMs / 60_000);
-  const durationMin = clampDuration(
+  const durationMin = clampTimerDuration(
     input.durationMin != null && Number.isFinite(input.durationMin)
       ? input.durationMin
-      : Math.max(DURATION_MIN, fromRemaining),
+      : Math.max(TIMER_DURATION_MIN, fromRemaining),
   );
 
   return {
