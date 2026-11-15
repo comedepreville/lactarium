@@ -265,7 +265,9 @@ export function TirageCountdown() {
 
   function skipToForm() {
     const datetime = new Date().toISOString();
-    router.push(`/ajouter?datetime=${encodeURIComponent(datetime)}`);
+    router.push(
+      `/ajouter?datetime=${encodeURIComponent(datetime)}&duration=${durationMin}`,
+    );
   }
 
   const showSetupControls = phase === "setup";
