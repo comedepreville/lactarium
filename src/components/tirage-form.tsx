@@ -35,7 +35,7 @@ type Props = {
   initialQuantityMl?: number;
   initialDuration?: number | null;
   initialNotes?: string | null;
-  /** Si true, la durée n’est pas préremplie (skip minuteur). */
+  /** Si true, la durée n’est pas préremplie (ex. datetime sans durée en query). */
   requireManualDuration?: boolean;
 };
 
